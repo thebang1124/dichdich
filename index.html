@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ứng dụng Dịch Tiếng Êđê - Việt</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4f46e5;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .dark .bg-gray-50 { background-color: #1a202c; }
+        .dark .bg-white { background-color: #2d3748; }
+        .dark .text-gray-800 { color: #f7fafc; }
+        .dark .text-gray-600 { color: #cbd5e0; }
+        .dark .text-gray-700 { color: #e2e8f0; }
+        .dark .border-gray-200 { border-color: #4a5568; }
+        .dark .bg-gray-50 { background-color: #4a5568; }
+        .dark .border-gray-300 { border-color: #6b7280; }
+        .dark .placeholder-gray-400::placeholder { color: #a0aec0; }
+        .dark .bg-indigo-50 { background-color: #4338ca; } /* Darker indigo for dark mode */
+        .dark .border-indigo-200 { border-color: #6366f1; }
+        .dark .text-indigo-800 { color: #e0e7ff; }
+        .dark .bg-purple-50 { background-color: #7c3aed; } /* Darker purple for dark mode */
+        .dark .border-purple-200 { border-color: #a78bfa; }
+        .dark .text-purple-800 { color: #ede9fe; }
+        .dark .bg-blue-50 { background-color: #2563eb; } /* Darker blue for dark mode */
+        .dark .border-blue-200 { border-color: #60a5fa; }
+        .dark .text-blue-700 { color: #bfdbfe; }
+        .dark .text-indigo-600 { color: #818cf8; }
+        .dark .text-purple-600 { color: #c084fc; }
+        .dark .text-gray-500 { color: #a0aec0; }
+        .dark .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.15); }
+        .dark .shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2); }
+        .dark .bg-indigo-600 { background-color: #4f46e5; }
+        .dark .hover\:bg-indigo-700:hover { background-color: #4338ca; }
+        .dark .bg-purple-600 { background-color: #9333ea; }
+        .dark .hover\:bg-purple-700:hover { background-color: #7e22ce; }
+        .dark .bg-gray-400 { background-color: #6b7280; }
+        .dark .bg-gray-600 { background-color: #1a202c; }
+        .dark .bg-gray-700 { background-color: #2d3748; }
+        .dark .text-white { color: #f7fafc; }
+        .dark .border-b-indigo-500 { border-color: #6366f1; }
+        .dark .border-b-gray-300 { border-color: #4a5568; }
+        .dark .text-gray-400 { color: #a0aec0; }
+    </style>
+</head>
+<body class="bg-gray-50 transition-colors duration-300">
+    <div id="root"></div>
+
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, getDocs, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        window.firebase = {
+            initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut,
+            getFirestore, collection, doc, addDoc, getDocs, onSnapshot, query, orderBy, serverTimestamp
+        };
+    </script>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        // MessageModal Component for displaying messages
+        const MessageModal = ({ message, onClose }) => {
+            if (!message) return null;
+            return (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4 dark:bg-gray-700 dark:text-white">
+                        <p className="text-lg font-semibold text-gray-800 mb-4 dark:text-white">{message}</p>
+                        <button
+                            onClick={onClose}
+                            className="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+                        >
+                            Đóng
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        function App() {
+            const [darkMode, setDarkMode] = useState(false);
+            const [activeTab, setActiveTab] = useState('translate'); // 'translate', 'image', 'generate', 'explain', 'history', 'user'
+            const [message, setMessage] = useState('');
+
+            // Firebase States
+            const [db, setDb] = useState(null);
+            const [auth, setAuth] = useState(null);
+            const [userId, setUserId] = useState(null);
+            const [isAuthenticated, setIsAuthenticated] = useState(false);
+            const [authLoading, setAuthLoading] = useState(true);
+
+            // Translation States
+            const [edeWord, setEdeWord] = useState('');
+            const [vietnameseMeaning, setVietnameseMeaning] = useState('');
+            const [isLoadingTextTranslate, setIsLoadingTextTranslate] = useState(false);
+            const [showGenerateExampleButton, setShowGenerateExampleButton] = useState(false);
+            const [exampleSentence, setExampleSentence] = useState('');
+            const [isLoadingExample, setIsLoadingExample] = useState(false);
+
+            // Image Translation States
+            const [imageSrc, setImageSrc] = useState(null);
+            const [extractedText, setExtractedText] = useState('');
+            const [imageTranslation, setImageTranslation] = useState('');
+            const [isLoadingImageTranslate, setIsLoadingImageTranslate] = useState(false);
+
+            // Paragraph Generation States
+            const [paragraphPrompt, setParagraphPrompt] = useState('');
+            const [generatedParagraph, setGeneratedParagraph] = useState('');
+            const [isLoadingParagraph, setIsLoadingParagraph] = useState(false);
+
+            // Explanation States
+            const [explanationWord, setExplanationWord] = useState('');
+            const [generatedExplanation, setGeneratedExplanation] = useState('');
+            const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
+
+            // History States
+            const [historyItems, setHistoryItems] = useState([]);
+            const historyUnsubscribeRef = useRef(null);
+
+            // Dictionary Data with some examples
+            const dictionaryData = useMemo(() => [
+                { ede: "Abao", type: "dt", vietnamese: "Ốc bươu", examples: [] },
+                { ede: "Abăn", type: "dt", vietnamese: "Cái chăn (mền). Msăm abăn: Đắp chăn; Abăn hmlei: Chăn bông", examples: [] },
+                { ede: "Abŭ", type: "dt", vietnamese: "Cái hũ", examples: [] },
+                { ede: "Adei", type: "dt", vietnamese: "Em", examples: [] },
+                { ede: "Adě", type: "dt", vietnamese: "Hến", examples: [] },
+                { ede: "Adham", type: "dt", vietnamese: "Một nhóm trong tộc người Êđê", examples: [] },
+                { ede: "Adhan", type: "dt", vietnamese: "Cành. Adhan kyão: Cành cây", examples: [] },
+                { ede: "Adhei", type: "dt", vietnamese: "Trán. Adhei bai: Trán rộng", examples: [] },
+                { ede: "Adiê", type: "dt", vietnamese: "Trời. Adiê hjan: Trời mưa", examples: [] },
+                { ede: "Adiê không", type: "", vietnamese: "Nắng hạn", examples: [] },
+                { ede: "Adiê tlam", type: "", vietnamese: "Xế chiều", examples: [] },
+                { ede: "Adih", type: "đt", vietnamese: "Kia. Sang kâo ti anôk adih: Nhà tôi chỗ kia; Hruê aguah adih kâo đuễ hiu: Sáng ngày kia tôi đi chơi", examples: [] },
+                { ede: "Adôk", type: "đgt", vietnamese: "Còn. Kâo adôk prăk: Tôi còn tiền; Adôk hdĩp: Còn sống", examples: [] },
+                { ede: "Adrăng", type: "dt", vietnamese: "Rơm rạ. Mkăm adrăng: Đống rơm", examples: [] },
+                { ede: "Adring", type: "dt", vietnamese: "Hiên nhà sàn. Amĩ kâo bhu mdiê ti adring: Mẹ tôi phơi lúa ở hiên nhà sàn", examples: [] },
+                { ede: "Adrök", type: "dt", vietnamese: "Con cóc", examples: [] },
+                { ede: "Aduôn", type: "dt", vietnamese: "Bà (nội, ngoại)", examples: [] },
+                { ede: "Adŭ", type: "dt", vietnamese: "1.Phòng. Adŭ pit: Phòng ngủ; Adŭ hriăm: Phòng học. 2. Lớp. Adŭ năm: Lớp 6; Adŭ pluh dua: Lớp 12. 3. Cái ô. Adŭ jũ: Ô màu đen", examples: [] },
+                { ede: "Adŭ bruă", type: "dt", vietnamese: "Văn phòng", examples: [] },
+                { ede: "Adŭ git gai bruă kiă kriê", type: "dt", vietnamese: "Phòng hành chính", examples: [] },
+                { ede: "Adŭ tĭng yap", type: "dt", vietnamese: "Phòng kế toán", examples: [] },
+                { ede: "Adŭng", type: "dt", vietnamese: "Mũi. Băng adũng: Lỗ mũi", examples: [] },
+                { ede: "Aê", type: "dt", vietnamese: "Ông (nội, ngoại)", examples: [] },
+                { ede: "Aê êa drao", type: "dt", vietnamese: "Bác sĩ", examples: [] },
+                { ede: "Aguah", type: "trạng từ", vietnamese: "Buổi sáng. Aguah ưm: Sáng sớm; Aguah mgi: Sáng mai; Aguah mbruê: Sáng hôm qua", examples: [] },
+                { ede: "Ai", type: "dt", vietnamese: "Sức. Ai ktang: Sức mạnh", examples: [] },
+                { ede: "Ajik", type: "dt", vietnamese: "Ếch", examples: [] },
+                { ede: "Ak", type: "dt", vietnamese: "Con quạ. Jũ msě si ak: Đen như quạ", examples: [] },
+                { ede: "Akăt", type: "dt", vietnamese: "Bụi (khóm). Akăt kram: Bụi tre", examples: [] },
+                { ede: "Akâo", type: "đgt", vietnamese: "Xin. Akâo prăk: Xin tiền; Akâo êa mnăm: Xin nước uống", examples: [] },
+                { ede: "Ala", type: "dt", vietnamese: "Con rắn. Ala knăl: Rắn giun; Ala mtah: Rắn lục", examples: [] },
+                { ede: "Alah", type: "tt", vietnamese: "Lười biếng. Alah mă bruă: Lười làm việc", examples: [] },
+                { ede: "Ală", type: "dt", vietnamese: "Mắt. Pĩt ală: Nhắm mắt", examples: [] },
+                { ede: "Ama", type: "dt", vietnamese: "Bố (cha)", examples: [] },
+                { ede: "Amai", type: "dt", vietnamese: "Chị", examples: [] },
+                { ede: "Amâo", type: "pht", vietnamese: "Không. Amâo mâo: Không có", examples: [] },
+                { ede: "Ami", type: "dt", vietnamese: "Mẹ (má)", examples: [] },
+                { ede: "Ana", type: "dt", vietnamese: "Cây. (tt): Giống cái (động vật). Ɇmô ana: Bò cái", examples: ["Hlăm hma, awa pla lu ana boh kroh. - Trong rẫy, bác trồng nhiều loại cây ăn trái.", "Ɇmô ana sang aê mrâo mdai. - Bò cái nhà ông mới đẻ."] },
+                { ede: "Anak", type: "dt", vietnamese: "Con (người)", examples: [] },
+                { ede: "Anăn", type: "dt", vietnamese: "Tên. (đt): Đó, đấy", examples: [] },
+                { ede: "Anei", type: "đt", vietnamese: "Đây. Kâo mă bruă ti anei: Tôi làm việc ở đây", examples: [] },
+                { ede: "Anôk", type: "dt", vietnamese: "Nơi, chỗ, vị trí. Djõ anôk: Đúng vị trí", examples: [] },
+                { ede: "Ao", type: "dt", vietnamese: "Áo. Ao kỗ: Áo trắng. Ao hjan: Áo mưa", examples: [] },
+                { ede: "Arăng", type: "đt", vietnamese: "Người ta", examples: ["Kâo dlăng arăng bị lông đi čữ. - Tôi xem người ta thi leo núi."] },
+                { ede: "Asăr", type: "dt", vietnamese: "Hạt, hột. Asăr mdiê: Hạt lúa", examples: ["Boh čên anei lu asăr. - Quả chanh này nhiều hột.", "Mdiê bi asăr êdi. - Lúa rất chắc hạt."] },
+                { ede: "Asâo", type: "dt", vietnamese: "Con chó", examples: [] },
+                { ede: "Awa", type: "dt", vietnamese: "Bác (anh, chị của bố)", examples: [] },
+                { ede: "Ayong", type: "dt", vietnamese: "Anh", examples: [] },
+                
+                // Bổ sung từ mới
+                { ede: "Băng", type: "đgt", vietnamese: "Ăn (thức ăn nói chung), cháy, bén", examples: [] },
+                { ede: "Blei", type: "đgt", vietnamese: "Mua", examples: ["Amai blei dua aruăt klei mah. - Chị mua hai sợi dây chuyền vàng."] },
+                { ede: "Blŭ", type: "đgt", vietnamese: "Nói", examples: [] },
+                { ede: "Boh", type: "dt", vietnamese: "Quả, trái, trứng; (đgt) giặt; (tl) cái, chiếc", examples: ["Boh suai: quả xoài;", "Boh mnũ: trứng gà.", "Boh chum ao: giặt quần áo.", "Dua boh kčok: hai cái ly;"] },
+                { ede: "Bruă", type: "dt", vietnamese: "Việc, công việc. Mă bruă: làm việc", examples: ["Tơ nao mă bruă, kâo khăng đi êdeh pơ phút. - Khi đi làm, tôi thường đi xe máy."] },
+                { ede: "Buôn", type: "dt", vietnamese: "Làng, buôn", examples: ["Hlăm buôn anei, mão lu boh gõ esei kjăp băng huă. - Trong buôn này, có nhiều con trâu ăn khỏe."] },
+                { ede: "Čih", type: "đgt", vietnamese: "Viết", examples: [] },
+                { ede: "Dlăng", type: "đgt", vietnamese: "Đọc, xem, nhìn", examples: [] },
+                { ede: "Djam", type: "dt", vietnamese: "Rau, canh", examples: [] },
+                { ede: "Djă", type: "đgt", vietnamese: "Cầm, giữ", examples: [] },
+                { ede: "Drei", type: "đt", vietnamese: "Chúng ta, ta; (tl) con (dùng đếm con vật)", examples: [] },
+                { ede: "Êa", type: "dt", vietnamese: "Nước", examples: [] },
+                { ede: "Êdeh", type: "dt", vietnamese: "Xe", examples: ["Tơ nao mă bruă, kâo khăng đi êdeh pơ phút. - Khi đi làm, tôi thường đi xe máy."] },
+                { ede: "Êmô", type: "dt", vietnamese: "Con bò", examples: [] },
+                { ede: "Êsei", type: "dt", vietnamese: "Cơm", examples: [] },
+                { ede: "Hriăm", type: "đgt", vietnamese: "Học", examples: [] },
+                { ede: "Hruê", type: "dt", vietnamese: "Ngày", examples: ["Hruê mdei, kâo hiu chưn hồng bằng gặp. - Ngày nghỉ, tôi đi chơi với bạn."] },
+                { ede: "Huă", type: "đgt", vietnamese: "Ăn (cơm)", examples: [] },
+                { ede: "Ih", type: "đt", vietnamese: "Anh, chị, bạn (ngôi thứ 2 số ít)", examples: [] },
+                { ede: "Jăk", type: "tt", vietnamese: "Tốt, ngon", examples: [] },
+                { ede: "Kâo", type: "đt", vietnamese: "Tôi (ngôi thứ nhất số ít)", examples: ["Kâo dlăng arăng bị lông đi čữ. - Tôi xem người ta thi leo núi."] },
+                { ede: "Kan", type: "dt", vietnamese: "Cá", examples: [] },
+                { ede: "Khăp", type: "đgt", vietnamese: "Thích, yêu", examples: [] },
+                { ede: "Klei", type: "dt", vietnamese: "Tiếng, lời, sự việc, dây", examples: ["Amai blei dua aruăt klei mah. - Chị mua hai sợi dây chuyền vàng."] },
+                { ede: "Kphê", type: "dt", vietnamese: "Cà phê", examples: ["Čar Dak Lak pla lu kphê. - Tỉnh Đắk Lắk trồng nhiều cà phê."] },
+                { ede: "Kyâo", type: "dt", vietnamese: "Gỗ, cây", examples: ["Sang kâo ngã hõng kyâo. - Nhà tôi làm bằng gỗ."] },
+                { ede: "Mă", type: "đgt", vietnamese: "Làm, lấy, bắt", examples: [] },
+                { ede: "Mâo", type: "đgt", vietnamese: "Có, được", examples: [] },
+                { ede: "Mdiê", type: "dt", vietnamese: "Lúa", examples: [] },
+                { ede: "Mlan", type: "dt", vietnamese: "Tháng, trăng", examples: [] },
+                { ede: "Mnăm", type: "đgt", vietnamese: "Uống", examples: [] },
+                { ede: "Mniê", type: "dt", vietnamese: "Phụ nữ, con gái", examples: [] },
+                { ede: "Mnuih", type: "dt", vietnamese: "Người", examples: [] },
+                { ede: "Mnŭ", type: "dt", vietnamese: "Con gà", examples: [] },
+                { ede: "Nao", type: "đgt", vietnamese: "Đi", examples: [] },
+                { ede: "Ñu", type: "đt", vietnamese: "Nó, ông ấy, bà ấy (ngôi thứ 3 số ít)", examples: [] },
+                { ede: "Pla", type: "đgt", vietnamese: "Trồng, cấy", examples: ["Hlăm hma, awa pla lu ana boh kroh. - Trong rẫy, bác trồng nhiều loại cây ăn trái."] },
+                { ede: "Prăk", type: "dt", vietnamese: "Tiền, bạc", examples: [] },
+                { ede: "Ruă", type: "đgt", vietnamese: "Đau, ốm", examples: ["Amũ kâo ruă aruăt ariêng. - Mẹ tôi đau gân cốt."] },
+                { ede: "Sang", type: "dt", vietnamese: "Nhà", examples: ["Sang kâo ngã hõng kyâo. - Nhà tôi làm bằng gỗ."] },
+                { ede: "Siam", type: "tt", vietnamese: "Đẹp", examples: [] },
+                { ede: "Thâo", type: "đgt", vietnamese: "Biết", examples: [] },
+                { ede: "Thuôn", type: "dt", vietnamese: "Năm, tuổi", examples: [] },
+                { ede: "Ŭn", type: "dt", vietnamese: "Lợn, heo", examples: [] },
+                { ede: "Aruăt", type: "dt", vietnamese: "Gân, sợi", examples: ["Amũ kâo ruă aruăt ariêng. - Mẹ tôi đau gân cốt.", "Amai blei dua aruăt klei mah. - Chị mua hai sợi dây chuyền vàng."] },
+                { ede: "Čar", type: "dt", vietnamese: "Tỉnh, chẻ", examples: ["Čar Dak Lak pla lu kphê. - Tỉnh Đắk Lắk trồng nhiều cà phê.", "Aê dôk čar mnũng. - Ông đang chẻ lạt."] },
+                { ede: "Đi", type: "đgt", vietnamese: "Leo, trèo, cưỡi, đi", examples: ["Kâo dlăng arăng bị lông đi čữ. - Tôi xem người ta thi leo núi.", "Tơ nao mă bruă, kâo khăng đi êdeh pơ phút. - Khi đi làm, tôi thường đi xe máy.", "Hruê mdei, kâo hiu chưn hồng bằng gặp. - Ngày nghỉ, tôi đi chơi với bạn."] }
+            ], []);
+
+            const showMessage = (msg) => {
+                setMessage(msg);
+            };
+
+            const closeMessage = () => {
+                setMessage('');
+            };
+
+            // --- Firebase Initialization and Auth ---
+            useEffect(() => {
+                const initializeFirebase = async () => {
+                    try {
+                        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+                        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+                        if (!firebaseConfig) {
+                            console.error("Firebase config is not available.");
+                            setAuthLoading(false);
+                            return;
+                        }
+
+                        const app = window.firebase.initializeApp(firebaseConfig);
+                        const authInstance = window.firebase.getAuth(app);
+                        const firestoreInstance = window.firebase.getFirestore(app);
+
+                        setAuth(authInstance);
+                        setDb(firestoreInstance);
+
+                        window.firebase.onAuthStateChanged(authInstance, async (user) => {
+                            if (user) {
+                                setUserId(user.uid);
+                                setIsAuthenticated(true);
+                            } else {
+                                try {
+                                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                                        await window.firebase.signInWithCustomToken(authInstance, __initial_auth_token);
+                                    } else {
+                                        await window.firebase.signInAnonymously(authInstance);
+                                    }
+                                } catch (error) {
+                                    console.error("Firebase sign-in error:", error);
+                                    showMessage("Lỗi đăng nhập: " + error.message);
+                                }
+                            }
+                            setAuthLoading(false);
+                        });
+                    } catch (error) {
+                        console.error("Error initializing Firebase:", error);
+                        showMessage("Lỗi khởi tạo Firebase: " + error.message);
+                        setAuthLoading(false);
+                    }
+                };
+                initializeFirebase();
+            }, []);
+
+            // --- Dark Mode Toggle ---
+            useEffect(() => {
+                if (darkMode) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }, [darkMode]);
+
+            const toggleDarkMode = () => {
+                setDarkMode(!darkMode);
+            };
+
+            // --- Reset states when changing tabs ---
+            useEffect(() => {
+                // Reset all states related to content/inputs when tab changes
+                setEdeWord('');
+                setVietnameseMeaning('');
+                setIsLoadingTextTranslate(false);
+                setShowGenerateExampleButton(false);
+                setExampleSentence('');
+                setIsLoadingExample(false);
+
+                setImageSrc(null);
+                setExtractedText('');
+                setImageTranslation('');
+                setIsLoadingImageTranslate(false);
+
+                setParagraphPrompt('');
+                setGeneratedParagraph('');
+                setIsLoadingParagraph(false);
+
+                setExplanationWord('');
+                setGeneratedExplanation('');
+                setIsLoadingExplanation(false);
+
+                setMessage(''); // Clear any modal messages
+            }, [activeTab]);
+
+
+            // --- Text Translation Logic ---
+            const handleInputChange = (event) => {
+                const input = event.target.value;
+                setEdeWord(input);
+                setExampleSentence(''); // Clear example when input changes
+                setShowGenerateExampleButton(false); // Hide button
+                if (input.trim() === '') {
+                    setVietnameseMeaning('');
+                } else {
+                    translateWord(input);
+                }
+            };
+
+            const translateWord = async (word) => {
+                const lowerCaseWord = word.trim().toLowerCase();
+                const foundEntry = dictionaryData.find(entry => entry.ede.toLowerCase() === lowerCaseWord);
+
+                if (foundEntry) {
+                    setVietnameseMeaning(`(${foundEntry.type}) ${foundEntry.vietnamese} (Từ điển nội bộ)`);
+                    if (foundEntry.examples && foundEntry.examples.length > 0) {
+                        setExampleSentence(foundEntry.examples.join('\n'));
+                        setShowGenerateExampleButton(false);
+                    } else {
+                        setExampleSentence('Không có ví dụ trong từ điển.');
+                        setShowGenerateExampleButton(true); // Allow generating example if not in dict
+                    }
+                } else {
+                    setIsLoadingTextTranslate(true);
+                    setVietnameseMeaning('Đang tìm kiếm bản dịch bằng AI...');
+                    setExampleSentence('');
+                    setShowGenerateExampleButton(false); // Hide until AI result is known
+
+                    try {
+                        const prompt = `Dịch từ Êđê sau sang tiếng Việt: "${word}". Chỉ trả về bản dịch thuần túy, không có giải thích hay định dạng gì thêm. Nếu không biết, hãy trả lời "Không tìm thấy".`;
+                        let chatHistory = [];
+                        chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                        const payload = { contents: chatHistory };
+                        const apiKey = "AIzaSyDJ7ECoH5VagzAqaZ5QrBFS2Yx-mWbHmOg"; 
+                        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        const result = await response.json();
+                        if (result.candidates && result.candidates.length > 0 &&
+                            result.candidates[0].content && result.candidates[0].content.parts &&
+                            result.candidates[0].content.parts.length > 0) {
+                            const text = result.candidates[0].content.parts[0].text;
+                            if (text.toLowerCase().includes("không tìm thấy")) {
+                                setVietnameseMeaning("Không tìm thấy từ này trong từ điển hoặc qua AI.");
+                                setShowGenerateExampleButton(false);
+                            } else {
+                                setVietnameseMeaning(`${text} (Dịch bởi AI)`);
+                                setShowGenerateExampleButton(true); // Allow generating example if AI found a translation
+                            }
+                        } else {
+                            setVietnameseMeaning("Không thể dịch từ này bằng AI.");
+                            setShowGenerateExampleButton(false);
+                        }
+                    } catch (error) {
+                        console.error("Lỗi khi dịch bằng AI:", error);
+                        showMessage("Đã xảy ra lỗi khi dịch từ bằng AI.");
+                        setVietnameseMeaning("Đã xảy ra lỗi khi dịch từ bằng AI.");
+                        setShowGenerateExampleButton(false);
+                    } finally {
+                        setIsLoadingTextTranslate(false);
+                    }
+                }
+            };
+
+            const generateExampleSentence = async () => {
+                if (!edeWord.trim()) {
+                    showMessage("Vui lòng nhập từ tiếng Êđê để tạo ví dụ.");
+                    return;
+                }
+                setIsLoadingExample(true);
+                setExampleSentence('Đang tạo ví dụ...');
+                try {
+                    const prompt = `Tạo một câu ví dụ bằng tiếng Êđê sử dụng từ: "${edeWord}". Sau đó dịch câu đó sang tiếng Việt. Định dạng: "Câu Êđê - Câu Việt".`;
+                    let chatHistory = [];
+                    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                    const payload = { contents: chatHistory };
+                    const apiKey = "AIzaSyDJ7ECoH5VagzAqaZ5QrBFS2Yx-mWbHmOg"; 
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        setExampleSentence(text);
+                    } else {
+                        setExampleSentence("Không thể tạo ví dụ.");
+                    }
+                } catch (error) {
+                    console.error("Lỗi khi tạo ví dụ:", error);
+                    showMessage("Đã xảy ra lỗi khi tạo ví dụ.");
+                    setExampleSentence("Đã xảy ra lỗi khi tạo ví dụ.");
+                } finally {
+                    setIsLoadingExample(false);
+                }
+            };
+
+            // --- Image Translation Logic ---
+            const handleImageUpload = (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        setImageSrc(e.target.result);
+                        setExtractedText('');
+                        setImageTranslation('');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+
+            const handleImageTranslate = async () => {
+                if (!imageSrc) {
+                    showMessage("Vui lòng chọn một hình ảnh trước.");
+                    return;
+                }
+                setIsLoadingImageTranslate(true);
+                setExtractedText('');
+                setImageTranslation('');
+
+                try {
+                    const base64ImageData = imageSrc.split(',')[1];
+                    const extractPrompt = "Trích xuất tất cả văn bản tiếng Êđê từ hình ảnh này. Chỉ trả về văn bản thuần túy, không có giải thích hay định dạng gì thêm.";
+                    let chatHistoryExtract = [];
+                    chatHistoryExtract.push({ role: "user", parts: [{ text: extractPrompt }] });
+                    chatHistoryExtract.push({ role: "user", parts: [{ inline_data: { mime_type: "image/jpeg", data: base64ImageData } }] });
+
+                    const payloadExtract = { contents: chatHistoryExtract };
+                    const apiKey = "AIzaSyDJ7ECoH5VagzAqaZ5QrBFS2Yx-mWbHmOg"; 
+                    const apiUrlExtract = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                    
+                    const responseExtract = await fetch(apiUrlExtract, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payloadExtract)
+                    });
+
+                    if (!responseExtract.ok) {
+                        throw new Error(`Lỗi API trích xuất văn bản: ${responseExtract.statusText}`);
+                    }
+
+                    const resultExtract = await responseExtract.json();
+                    let extractedTextFromImage = "Không thể trích xuất văn bản.";
+                    if (resultExtract.candidates && resultExtract.candidates[0]?.content?.parts[0]?.text) {
+                        extractedTextFromImage = resultExtract.candidates[0].content.parts[0].text;
+                    }
+                    setExtractedText(extractedTextFromImage);
+
+                    if (extractedTextFromImage && extractedTextFromImage.trim() !== "" && extractedTextFromImage !== "Không thể trích xuất văn bản.") {
+                        const translatePrompt = `Dịch đoạn văn tiếng Êđê sau sang tiếng Việt: "${extractedTextFromImage}". Chỉ trả về bản dịch thuần túy, không có giải thích hay định dạng gì thêm.`;
+                        let chatHistoryTranslate = [];
+                        chatHistoryTranslate.push({ role: "user", parts: [{ text: translatePrompt }] });
+                        const payloadTranslate = { contents: chatHistoryTranslate };
+                        const apiUrlTranslate = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                        const responseTranslate = await fetch(apiUrlTranslate, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payloadTranslate)
+                        });
+
+                        if (!responseTranslate.ok) {
+                            throw new Error(`Lỗi API dịch văn bản: ${responseTranslate.statusText}`);
+                        }
+
+                        const resultTranslate = await responseTranslate.json();
+                        let translatedText = "Không thể dịch văn bản.";
+                        if (resultTranslate.candidates && resultTranslate.candidates[0]?.content?.parts[0]?.text) {
+                            translatedText = resultTranslate.candidates[0].content.parts[0].text;
+                        }
+                        setImageTranslation(translatedText);
+                    } else {
+                        setImageTranslation("Không có văn bản để dịch.");
+                    }
+
+                } catch (error) {
+                    console.error("Lỗi khi dịch ảnh:", error);
+                    showMessage(`Đã xảy ra lỗi: ${error.message}. Vui lòng thử lại.`);
+                    setExtractedText("Đã xảy ra lỗi khi trích xuất văn bản từ ảnh.");
+                    setImageTranslation("Đã xảy ra lỗi khi dịch văn bản từ ảnh.");
+                } finally {
+                    setIsLoadingImageTranslate(false);
+                }
+            };
+
+            // --- Paragraph Generation Logic ---
+            const generateParagraph = async () => {
+                if (!paragraphPrompt.trim()) {
+                    showMessage("Vui lòng nhập chủ đề để tạo đoạn văn.");
+                    return;
+                }
+                setIsLoadingParagraph(true);
+                setGeneratedParagraph('Đang tạo đoạn văn...');
+                try {
+                    const prompt = `Viết một đoạn văn ngắn bằng tiếng Êđê về chủ đề: "${paragraphPrompt}". Độ dài khoảng 3-5 câu. Đảm bảo ngữ pháp và từ vựng chính xác.`;
+                    let chatHistory = [];
+                    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                    const payload = { contents: chatHistory };
+                    const apiKey = "AIzaSyDJ7ECoH5VagzAqaZ5QrBFS2Yx-mWbHmOg"; 
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        setGeneratedParagraph(result.candidates[0].content.parts[0].text);
+                    } else {
+                        setGeneratedParagraph("Không thể tạo đoạn văn.");
+                    }
+                } catch (error) {
+                    console.error("Lỗi khi tạo đoạn văn:", error);
+                    showMessage("Đã xảy ra lỗi khi tạo đoạn văn.");
+                    setGeneratedParagraph("Đã xảy ra lỗi khi tạo đoạn văn.");
+                } finally {
+                    setIsLoadingParagraph(false);
+                }
+            };
+
+            const saveParagraphToHistory = async () => {
+                if (!isAuthenticated || !userId || !db) {
+                    showMessage("Vui lòng đăng nhập để lưu lịch sử.");
+                    return;
+                }
+                if (!paragraphPrompt.trim() || !generatedParagraph.trim()) {
+                    showMessage("Không có đoạn văn để lưu.");
+                    return;
+                }
+                try {
+                    const historyCollectionRef = window.firebase.collection(db, `artifacts/${__app_id}/users/${userId}/ede_history`);
+                    await window.firebase.addDoc(historyCollectionRef, {
+                        type: 'paragraph_generation',
+                        prompt: paragraphPrompt,
+                        edeText: generatedParagraph,
+                        timestamp: window.firebase.serverTimestamp()
+                    });
+                    showMessage("Đoạn văn đã được lưu vào lịch sử!");
+                } catch (error) {
+                    console.error("Lỗi khi lưu đoạn văn:", error);
+                    showMessage("Lỗi khi lưu đoạn văn: " + error.message);
+                }
+            };
+
+            // --- Explanation Logic ---
+            const getExplanation = async () => {
+                if (!explanationWord.trim()) {
+                    showMessage("Vui lòng nhập từ hoặc khái niệm để giải thích.");
+                    return;
+                }
+                setIsLoadingExplanation(true);
+                setGeneratedExplanation('Đang giải thích...');
+                try {
+                    const prompt = `Giải thích khái niệm/từ Êđê sau bằng tiếng Việt: "${explanationWord}". Trả lời ngắn gọn, rõ ràng, không quá 3 câu.`;
+                    let chatHistory = [];
+                    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                    const payload = { contents: chatHistory };
+                    const apiKey = "AIzaSyDJ7ECoH5VagzAqaZ5QrBFS2Yx-mWbHmOg"; 
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        setGeneratedExplanation(result.candidates[0].content.parts[0].text);
+                    } else {
+                        setGeneratedExplanation("Không thể giải thích khái niệm này.");
+                    }
+                } catch (error) {
+                    console.error("Lỗi khi giải thích:", error);
+                    showMessage("Đã xảy ra lỗi khi giải thích.");
+                    setGeneratedExplanation("Đã xảy ra lỗi khi giải thích.");
+                } finally {
+                    setIsLoadingExplanation(false);
+                }
+            };
+
+            const saveExplanationToHistory = async () => {
+                if (!isAuthenticated || !userId || !db) {
+                    showMessage("Vui lòng đăng nhập để lưu lịch sử.");
+                    return;
+                }
+                if (!explanationWord.trim() || !generatedExplanation.trim()) {
+                    showMessage("Không có giải thích để lưu.");
+                    return;
+                }
+                try {
+                    const historyCollectionRef = window.firebase.collection(db, `artifacts/${__app_id}/users/${userId}/ede_history`);
+                    await window.firebase.addDoc(historyCollectionRef, {
+                        type: 'explanation',
+                        word: explanationWord,
+                        explanationText: generatedExplanation,
+                        timestamp: window.firebase.serverTimestamp()
+                    });
+                    showMessage("Giải thích đã được lưu vào lịch sử!");
+                } catch (error) {
+                    console.error("Lỗi khi lưu giải thích:", error);
+                    showMessage("Lỗi khi lưu giải thích: " + error.message);
+                }
+            };
+
+            // --- History Logic ---
+            useEffect(() => {
+                if (db && userId && isAuthenticated && activeTab === 'history') {
+                    if (historyUnsubscribeRef.current) {
+                        historyUnsubscribeRef.current(); // Unsubscribe previous listener
+                    }
+                    const historyCollectionRef = window.firebase.collection(db, `artifacts/${__app_id}/users/${userId}/ede_history`);
+                    const q = window.firebase.query(historyCollectionRef, window.firebase.orderBy('timestamp', 'desc'));
+                    
+                    historyUnsubscribeRef.current = window.firebase.onSnapshot(q, (snapshot) => {
+                        const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        setHistoryItems(items);
+                    }, (error) => {
+                        console.error("Error fetching history:", error);
+                        showMessage("Lỗi khi tải lịch sử: " + error.message);
+                    });
+                } else if (historyUnsubscribeRef.current) {
+                    historyUnsubscribeRef.current(); // Unsubscribe when not authenticated or not on history tab
+                    historyUnsubscribeRef.current = null;
+                    setHistoryItems([]);
+                }
+                return () => {
+                    if (historyUnsubscribeRef.current) {
+                        historyUnsubscribeRef.current();
+                    }
+                };
+            }, [db, userId, isAuthenticated, activeTab]);
+
+            const formatTimestamp = (timestamp) => {
+                if (!timestamp) return 'N/A';
+                const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+                return date.toLocaleString('vi-VN');
+            };
+
+            const handleLogout = async () => {
+                if (auth) {
+                    try {
+                        await window.firebase.signOut(auth);
+                        setUserId(null);
+                        setIsAuthenticated(false);
+                        showMessage("Đã đăng xuất thành công.");
+                        setActiveTab('translate'); // Redirect to translate tab after logout
+                    } catch (error) {
+                        console.error("Lỗi đăng xuất:", error);
+                        showMessage("Lỗi đăng xuất: " + error.message);
+                    }
+                }
+            };
+
+            if (authLoading) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-800">
+                        <div className="loader"></div>
+                        <p className="ml-4 text-gray-700 dark:text-gray-300">Đang tải ứng dụng...</p>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen bg-gray-50 dark:bg-gray-800 flex flex-col items-center p-4 transition-colors duration-300">
+                    <div className="w-full max-w-3xl mx-auto space-y-8">
+                        
+                        {/* Header and Dark Mode Toggle */}
+                        <div className="flex justify-between items-center mb-6">
+                            <div className="text-center flex-grow">
+                                <h1 className="text-4xl md:text-5xl font-extrabold text-gray-800 dark:text-white mb-2">
+                                    <span className="text-indigo-600 dark:text-indigo-400">Từ điển</span> & <span className="text-purple-600 dark:text-purple-400">Dịch thuật Êđê</span>
+                                </h1>
+                                <p className="text-lg text-gray-600 dark:text-gray-300">Dịch từ, cụm từ và hình ảnh; tạo văn bản và giải thích.</p>
+                            </div>
+                            <button
+                                onClick={toggleDarkMode}
+                                className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 shadow-md hover:shadow-lg transition-all"
+                                aria-label="Toggle dark mode"
+                            >
+                                {darkMode ? (
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                                        <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 0 1 .75 0l.75.22a.75.75 0 0 1 .58.56l.006.048c.03.111.115.196.226.226l.048.006a.75.75 0 0 1 .56.58l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.58.56l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.75-.22a.75.75 0 0 1-.58-.56l-.006-.048a.75.75 0 0 1-.226-.226l-.048-.006a.75.75 0 0 1-.56-.58l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .58-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM12 6a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 12 6ZM12 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 12 15ZM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM3.75 12a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75ZM18 12a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75ZM12 18.75a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5a.75.75 0 0 1 .75-.75ZM5.625 4.5a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM18.375 4.5a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM5.625 18.75a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM18.375 18.75a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22Z" clipRule="evenodd" />
+                                    </svg>
+                                ) : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                                        <path d="M9.528 1.718a.75.75 0 0 1 .75 0l.75.22a.75.75 0 0 1 .58.56l.006.048c.03.111.115.196.226.226l.048.006a.75.75 0 0 1 .56.58l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.58.56l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.75-.22a.75.75 0 0 1-.58-.56l-.006-.048a.75.75 0 0 1-.226-.226l-.048-.006a.75.75 0 0 1-.56-.58l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .58-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM12 6a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 12 6ZM12 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 12 15ZM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM3.75 12a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75ZM18 12a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75ZM12 18.75a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5a.75.75 0 0 1 .75-.75ZM5.625 4.5a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM18.375 4.5a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM5.625 18.75a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM18.375 18.75a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22Z" />
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
+
+                        {/* Navigation Tabs */}
+                        <div className="flex justify-center border-b border-gray-200 dark:border-gray-700 mb-8 overflow-x-auto">
+                            <TabButton tabName="translate" activeTab={activeTab} setActiveTab={setActiveTab}>Dịch Văn Bản</TabButton>
+                            <TabButton tabName="image" activeTab={activeTab} setActiveTab={setActiveTab}>Dịch Từ Ảnh</TabButton>
+                            <TabButton tabName="generate" activeTab={activeTab} setActiveTab={setActiveTab}>Tạo Đoạn Văn</TabButton>
+                            <TabButton tabName="explain" activeTab={activeTab} setActiveTab={setActiveTab}>Giải Thích</TabButton>
+                            <TabButton tabName="history" activeTab={activeTab} setActiveTab={setActiveTab} disabled={!isAuthenticated}>Lịch Sử</TabButton>
+                            <TabButton tabName="user" activeTab={activeTab} setActiveTab={setActiveTab}>Người Dùng</TabButton>
+                        </div>
+
+                        {/* Tab Content */}
+                        {activeTab === 'translate' && (
+                            <div className="bg-white dark:bg-gray-700 p-6 md:p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl">
+                                <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Dịch văn bản</h2>
+                                <p className="text-gray-600 dark:text-gray-400 mb-4">Nhập một từ hoặc cụm từ tiếng Êđê để nhận bản dịch và ví dụ (nếu có).</p>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label htmlFor="edeInput" className="block text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
+                                            Nhập từ tiếng Êđê:
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="edeInput"
+                                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200 ease-in-out text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-lg bg-gray-50 dark:bg-gray-800"
+                                            placeholder="Ví dụ: Kâo, Sang, Mă bruă..."
+                                            value={edeWord}
+                                            onChange={handleInputChange}
+                                        />
+                                    </div>
+                                    <div className="bg-indigo-50 dark:bg-indigo-900 p-4 rounded-lg border border-indigo-200 dark:border-indigo-700 min-h-[90px] flex flex-col justify-center">
+                                        <h3 className="text-md font-semibold text-indigo-800 dark:text-indigo-200 mb-1">Nghĩa tiếng Việt:</h3>
+                                        {isLoadingTextTranslate ? (
+                                            <div className="loader mx-auto my-4"></div>
+                                        ) : (
+                                            <p className="text-gray-800 dark:text-gray-100 text-base">
+                                                {vietnameseMeaning || "Kết quả sẽ hiển thị ở đây."}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg border border-blue-200 dark:border-blue-700 min-h-[90px] flex flex-col justify-center">
+                                        <h3 className="text-md font-semibold text-blue-700 dark:text-blue-200 mb-1">Ví dụ:</h3>
+                                        {isLoadingExample ? (
+                                            <div className="loader mx-auto my-4"></div>
+                                        ) : (
+                                            <p className="text-gray-800 dark:text-gray-100 text-base whitespace-pre-wrap">
+                                                {exampleSentence || "Ví dụ về cách sử dụng từ sẽ hiển thị ở đây."}
+                                            </p>
+                                        )}
+                                        {showGenerateExampleButton && !isLoadingExample && (
+                                            <button
+                                                onClick={generateExampleSentence}
+                                                className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors self-start"
+                                            >
+                                                Tạo ví dụ bằng AI
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'image' && (
+                            <div className="bg-white dark:bg-gray-700 p-6 md:p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl">
+                                <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Dịch từ ảnh</h2>
+                                <p className="text-gray-600 dark:text-gray-400 mb-4">Tải lên một hình ảnh chứa văn bản tiếng Êđê để trích xuất và dịch.</p>
+                                <div className="space-y-4">
+                                    <div className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-center bg-gray-50 dark:bg-gray-800">
+                                        <label htmlFor="imageUpload" className="cursor-pointer inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-colors">
+                                            Chọn ảnh
+                                        </label>
+                                        <input id="imageUpload" type="file" accept="image/jpeg,image/png,image/gif" className="hidden" onChange={handleImageUpload} />
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">PNG, JPG, GIF,...</p>
+                                    </div>
+
+                                    {imageSrc && (
+                                        <div className="mt-4 text-center">
+                                            <img src={imageSrc} alt="Ảnh đã tải lên" className="max-w-full max-h-60 mx-auto rounded-lg shadow-md" />
+                                        </div>
+                                    )}
+                                    
+                                    <button
+                                        onClick={handleImageTranslate}
+                                        disabled={isLoadingImageTranslate || !imageSrc}
+                                        className="w-full flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        {isLoadingImageTranslate ? <div className="loader"></div> : 'Trích xuất & Dịch từ ảnh'}
+                                    </button>
+
+                                    {(extractedText || imageTranslation || isLoadingImageTranslate) && (
+                                        <div className="mt-4 space-y-4">
+                                            <div className="bg-purple-50 dark:bg-purple-900 p-4 rounded-lg border border-purple-200 dark:border-purple-700">
+                                                <h3 className="text-md font-semibold text-purple-800 dark:text-purple-200 mb-1">Văn bản gốc (Êđê):</h3>
+                                                <p className="text-gray-800 dark:text-gray-100 text-base whitespace-pre-wrap">
+                                                    {isLoadingImageTranslate && !extractedText ? "Đang trích xuất văn bản..." : extractedText}
+                                                </p>
+                                            </div>
+                                            <div className="bg-indigo-50 dark:bg-indigo-900 p-4 rounded-lg border border-indigo-200 dark:border-indigo-700">
+                                                <h3 className="text-md font-semibold text-indigo-800 dark:text-indigo-200 mb-1">Bản dịch (Việt):</h3>
+                                                <p className="text-gray-800 dark:text-gray-100 text-base whitespace-pre-wrap">
+                                                    {isLoadingImageTranslate && !imageTranslation ? "Đang dịch văn bản..." : imageTranslation}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'generate' && (
+                            <div className="bg-white dark:bg-gray-700 p-6 md:p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl">
+                                <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Tạo đoạn văn Êđê</h2>
+                                <p className="text-gray-600 dark:text-gray-400 mb-4">Nhập một chủ đề bằng tiếng Việt, AI sẽ giúp bạn tạo một đoạn văn ngắn bằng tiếng Êđê.</p>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label htmlFor="paragraphPrompt" className="block text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
+                                            Chủ đề (tiếng Việt):
+                                        </label>
+                                        <textarea
+                                            id="paragraphPrompt"
+                                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200 ease-in-out text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-lg bg-gray-50 dark:bg-gray-800 min-h-[100px]"
+                                            placeholder="Ví dụ: Một ngày ở buôn làng, Lễ hội truyền thống Êđê..."
+                                            value={paragraphPrompt}
+                                            onChange={(e) => setParagraphPrompt(e.target.value)}
+                                        ></textarea>
+                                    </div>
+                                    <button
+                                        onClick={generateParagraph}
+                                        disabled={isLoadingParagraph}
+                                        className="w-full flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        {isLoadingParagraph ? <div className="loader"></div> : 'Tạo Đoạn Văn'}
+                                    </button>
+                                    {generatedParagraph && (
+                                        <div className="mt-4 bg-indigo-50 dark:bg-indigo-900 p-4 rounded-lg border border-indigo-200 dark:border-indigo-700">
+                                            <h3 className="text-md font-semibold text-indigo-800 dark:text-indigo-200 mb-1">Đoạn văn Êđê:</h3>
+                                            <p className="text-gray-800 dark:text-gray-100 text-base whitespace-pre-wrap">{generatedParagraph}</p>
+                                            {isAuthenticated && (
+                                                <button
+                                                    onClick={saveParagraphToHistory}
+                                                    className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                                                >
+                                                    Lưu vào Lịch Sử
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'explain' && (
+                            <div className="bg-white dark:bg-gray-700 p-6 md:p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl">
+                                <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Giải thích từ/khái niệm Êđê</h2>
+                                <p className="text-gray-600 dark:text-gray-400 mb-4">Nhập một từ hoặc khái niệm tiếng Êđê để nhận lời giải thích ngắn gọn bằng tiếng Việt.</p>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label htmlFor="explanationWord" className="block text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
+                                            Từ/Khái niệm (tiếng Êđê):
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="explanationWord"
+                                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition duration-200 ease-in-out text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-lg bg-gray-50 dark:bg-gray-800"
+                                            placeholder="Ví dụ: Klei, Buôn, Mnuih Êđê..."
+                                            value={explanationWord}
+                                            onChange={(e) => setExplanationWord(e.target.value)}
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={getExplanation}
+                                        disabled={isLoadingExplanation}
+                                        className="w-full flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        {isLoadingExplanation ? <div className="loader"></div> : 'Giải Thích'}
+                                    </button>
+                                    {generatedExplanation && (
+                                        <div className="mt-4 bg-purple-50 dark:bg-purple-900 p-4 rounded-lg border border-purple-200 dark:border-purple-700">
+                                            <h3 className="text-md font-semibold text-purple-800 dark:text-purple-200 mb-1">Giải thích (tiếng Việt):</h3>
+                                            <p className="text-gray-800 dark:text-gray-100 text-base whitespace-pre-wrap">{generatedExplanation}</p>
+                                            {isAuthenticated && (
+                                                <button
+                                                    onClick={saveExplanationToHistory}
+                                                    className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                                                >
+                                                    Lưu vào Lịch Sử
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'history' && (
+                            <div className="bg-white dark:bg-gray-700 p-6 md:p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl">
+                                <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Lịch sử tương tác</h2>
+                                <p className="text-gray-600 dark:text-gray-400 mb-4">Xem lại các đoạn văn và giải thích bạn đã tạo.</p>
+                                {historyItems.length === 0 ? (
+                                    <p className="text-gray-500 dark:text-gray-400 text-center py-8">Chưa có mục nào trong lịch sử.</p>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {historyItems.map(item => (
+                                            <div key={item.id} className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
+                                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                                                    {formatTimestamp(item.timestamp)} - Loại: {item.type === 'paragraph_generation' ? 'Tạo Đoạn Văn' : 'Giải Thích'}
+                                                </p>
+                                                {item.type === 'paragraph_generation' ? (
+                                                    <>
+                                                        <h4 className="font-semibold text-gray-700 dark:text-gray-300">Chủ đề: {item.prompt}</h4>
+                                                        <p className="text-gray-800 dark:text-gray-100 whitespace-pre-wrap">{item.edeText}</p>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <h4 className="font-semibold text-gray-700 dark:text-gray-300">Từ/Khái niệm: {item.word}</h4>
+                                                        <p className="text-gray-800 dark:text-gray-100 whitespace-pre-wrap">{item.explanationText}</p>
+                                                    </>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {activeTab === 'user' && (
+                            <div className="bg-white dark:bg-gray-700 p-6 md:p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl">
+                                <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Thông tin người dùng</h2>
+                                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                                    Ứng dụng này sử dụng tài khoản ẩn danh hoặc tài khoản được cung cấp bởi môi trường Canvas để lưu trữ lịch sử tương tác của bạn.
+                                </p>
+                                <div className="space-y-3">
+                                    <p className="text-gray-700 dark:text-gray-300">
+                                        <span className="font-semibold">Trạng thái:</span> {isAuthenticated ? 'Đã đăng nhập' : 'Chưa đăng nhập'}
+                                    </p>
+                                    <p className="text-gray-700 dark:text-gray-300 break-all">
+                                        <span className="font-semibold">ID Người dùng:</span> {userId || 'N/A (Chưa đăng nhập)'}
+                                    </p>
+                                    {isAuthenticated && (
+                                        <button
+                                            onClick={handleLogout}
+                                            className="px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors"
+                                        >
+                                            Đăng xuất
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <MessageModal message={message} onClose={closeMessage} />
+                </div>
+            );
+        }
+
+        const TabButton = ({ tabName, activeTab, setActiveTab, children, disabled = false }) => (
+            <button
+                onClick={() => setActiveTab(tabName)}
+                disabled={disabled}
+                className={`px-4 py-2 text-lg font-medium rounded-t-lg transition-colors duration-200
+                    ${activeTab === tabName
+                        ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-500 dark:border-indigo-400'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border-b-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+                    }
+                    ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+                `}
+            >
+                {children}
+            </button>
+        );
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

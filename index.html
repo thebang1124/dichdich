@@ -79,12 +79,12 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, getDocs, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, addDoc, getDocs, onSnapshot, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Expose Firebase objects globally for the Babel script
         window.firebase = {
             initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut,
-            getFirestore, collection, doc, addDoc, getDocs, onSnapshot, query, orderBy, serverTimestamp
+            getFirestore, collection, doc, addDoc, getDocs, onSnapshot, query, serverTimestamp
         };
     </script>
 
@@ -146,13 +146,25 @@
             const [generatedExplanation, setGeneratedExplanation] = useState('');
             const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
 
+            // Speech-to-Text States
+            const [speechRecognitionText, setSpeechRecognitionText] = useState('');
+            const [isRecording, setIsRecording] = useState(false);
+            const recognitionRef = useRef(null); // Ref for SpeechRecognition object
+
+            // Text-to-Speech States
+            const [speechSynthesisText, setSpeechSynthesisText] = useState('');
+            const [isSpeaking, setIsSpeaking] = useState(false);
+            const [voices, setVoices] = useState([]);
+            const [selectedVoice, setSelectedVoice] = useState(null);
+            const synthRef = useRef(null); // Ref for SpeechSynthesis object
+
             // History States
             const [historyItems, setHistoryItems] = useState([]);
             const historyUnsubscribeRef = useRef(null);
 
             // Dictionary Data with some examples
             const dictionaryData = useMemo(() => [
-                { ede: "Abao", type: "dt", vietnamese: "Ốc bươu", examples: [] },
+               { ede: "Abao", type: "dt", vietnamese: "Ốc bươu", examples: [] },
                 { ede: "Abăn", type: "dt", vietnamese: "Cái chăn (mền). Msăm abăn: Đắp chăn; Abăn hmlei: Chăn bông", examples: [] },
                 { ede: "Abŭ", type: "dt", vietnamese: "Cái hũ", examples: [] },
                 { ede: "Adei", type: "dt", vietnamese: "Em", examples: [] },
@@ -167,7 +179,7 @@
                 { ede: "Adôk", type: "đgt", vietnamese: "Còn. Kâo adôk prăk: Tôi còn tiền; Adôk hdĩp: Còn sống", examples: [] },
                 { ede: "Adrăng", type: "dt", vietnamese: "Rơm rạ. Mkăm adrăng: Đống rơm", examples: [] },
                 { ede: "Adring", type: "dt", vietnamese: "Hiên nhà sàn. Amĩ kâo bhu mdiê ti adring: Mẹ tôi phơi lúa ở hiên nhà sàn", examples: [] },
-                { ede: "Adrök", type: "dt", vietnamese: "Con cóc", examples: [] },
+                { ede: "Adrŏk", type: "dt", vietnamese: "Con cóc", examples: [] },
                 { ede: "Aduôn", type: "dt", vietnamese: "Bà (nội, ngoại)", examples: [] },
                 { ede: "Adŭ", type: "dt", vietnamese: "1.Phòng. Adŭ pit: Phòng ngủ; Adŭ hriăm: Phòng học. 2. Lớp. Adŭ năm: Lớp 6; Adŭ pluh dua: Lớp 12. 3. Cái ô. Adŭ jũ: Ô màu đen", examples: [] },
                 { ede: "Adŭ bruă", type: "dt", vietnamese: "Văn phòng", examples: [] },
@@ -178,7 +190,7 @@
                 { ede: "Aê êa drao", type: "dt", vietnamese: "Bác sĩ", examples: [] },
                 { ede: "Aguah", type: "trạng từ", vietnamese: "Buổi sáng. Aguah ưm: Sáng sớm; Aguah mgi: Sáng mai; Aguah mbruê: Sáng hôm qua", examples: [] },
                 { ede: "Ai", type: "dt", vietnamese: "Sức. Ai ktang: Sức mạnh", examples: [] },
-                { ede: "Ajik", type: "dt", vietnamese: "Ếch", examples: [] },
+                { ede: "Ajĭk", type: "dt", vietnamese: "Ếch", examples: [] },
                 { ede: "Ak", type: "dt", vietnamese: "Con quạ. Jũ msě si ak: Đen như quạ", examples: [] },
                 { ede: "Akăt", type: "dt", vietnamese: "Bụi (khóm). Akăt kram: Bụi tre", examples: [] },
                 { ede: "Akâo", type: "đgt", vietnamese: "Xin. Akâo prăk: Xin tiền; Akâo êa mnăm: Xin nước uống", examples: [] },
@@ -188,7 +200,7 @@
                 { ede: "Ama", type: "dt", vietnamese: "Bố (cha)", examples: [] },
                 { ede: "Amai", type: "dt", vietnamese: "Chị", examples: [] },
                 { ede: "Amâo", type: "pht", vietnamese: "Không. Amâo mâo: Không có", examples: [] },
-                { ede: "Ami", type: "dt", vietnamese: "Mẹ (má)", examples: [] },
+                { ede: "Amĭ", type: "dt", vietnamese: "Mẹ (má)", examples: [] },
                 { ede: "Ana", type: "dt", vietnamese: "Cây. (tt): Giống cái (động vật). Ɇmô ana: Bò cái", examples: ["Hlăm hma, awa pla lu ana boh kroh. - Trong rẫy, bác trồng nhiều loại cây ăn trái.", "Ɇmô ana sang aê mrâo mdai. - Bò cái nhà ông mới đẻ."] },
                 { ede: "Anak", type: "dt", vietnamese: "Con (người)", examples: [] },
                 { ede: "Anăn", type: "dt", vietnamese: "Tên. (đt): Đó, đấy", examples: [] },
@@ -244,11 +256,11 @@
                 { ede: "Sang", type: "dt", vietnamese: "Nhà", examples: ["Sang kâo ngã hõng kyâo. - Nhà tôi làm bằng gỗ."] },
                 { ede: "Siam", type: "tt", vietnamese: "Đẹp", examples: [] },
                 { ede: "Thâo", type: "đgt", vietnamese: "Biết", examples: [] },
-                { ede: "Thuôn", type: "dt", vietnamese: "Năm, tuổi", examples: [] },
+                { ede: "Thŭn", type: "dt", vietnamese: "Năm, tuổi", examples: [] },
                 { ede: "Ŭn", type: "dt", vietnamese: "Lợn, heo", examples: [] },
                 { ede: "Aruăt", type: "dt", vietnamese: "Gân, sợi", examples: ["Amũ kâo ruă aruăt ariêng. - Mẹ tôi đau gân cốt.", "Amai blei dua aruăt klei mah. - Chị mua hai sợi dây chuyền vàng."] },
                 { ede: "Čar", type: "dt", vietnamese: "Tỉnh, chẻ", examples: ["Čar Dak Lak pla lu kphê. - Tỉnh Đắk Lắk trồng nhiều cà phê.", "Aê dôk čar mnũng. - Ông đang chẻ lạt."] },
-                { ede: "Đi", type: "đgt", vietnamese: "Leo, trèo, cưỡi, đi", examples: ["Kâo dlăng arăng bị lông đi čữ. - Tôi xem người ta thi leo núi.", "Tơ nao mă bruă, kâo khăng đi êdeh pơ phút. - Khi đi làm, tôi thường đi xe máy.", "Hruê mdei, kâo hiu chưn hồng bằng gặp. - Ngày nghỉ, tôi đi chơi với bạn."] }
+                { ede: "Đĭ", type: "đgt", vietnamese: "Leo, trèo, cưỡi, đi", examples: ["Kâo dlăng arăng bị lông đi čữ. - Tôi xem người ta thi leo núi.", "Tơ nao mă bruă, kâo khăng đi êdeh pơ phút. - Khi đi làm, tôi thường đi xe máy.", "Hruê mdei, kâo hiu chưn hồng bằng gặp. - Ngày nghỉ, tôi đi chơi với bạn."] }
             ], []);
 
             const showMessage = (msg) => {
@@ -317,6 +329,15 @@
             const toggleDarkMode = () => {
                 setDarkMode(!darkMode);
             };
+
+            // Define SVG paths as variables
+            const sunIconPath = (
+                <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 0 1 .75 0l.75.22a.75.75 0 0 1 .58.56l.006.048c.03.111.115.196.226.226l.048.006a.75.75 0 0 1 .56.58l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.58.56l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.75-.22a.75.75 0 0 1-.58-.56l-.006-.048a.75.75 0 0 1-.226-.226l-.048-.006a.75.75 0 0 1-.56-.58l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .58-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM12 6a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 12 6ZM12 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 12 15ZM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM3.75 12a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75ZM18 12a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75ZM12 18.75a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5a.75.75 0 0 1 .75-.75ZM5.625 4.5a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM18.375 4.5a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM5.625 18.75a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM18.375 18.75a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22Z" clipRule="evenodd" />
+            );
+
+            const moonIconPath = (
+                <path d="M9.528 1.718a.75.75 0 0 1 .75 0l.75.22a.75.75 0 0 1 .58.56l.006.048c.03.111.115.196.226.226l.048.006a.75.75 0 0 1 .56.58l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.58.56l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.75-.22a.75.75 0 0 1-.58-.56l-.006-.048a.75.75 0 0 1-.226-.226l-.048-.006a.75.75 0 0 1-.56-.58l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .58-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM12 6a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 12 6ZM12 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 12 15ZM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM3.75 12a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75ZM18 12a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75ZM12 18.75a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5a.75.75 0 0 1 .75-.75ZM5.625 4.5a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM18.375 4.5a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM5.625 18.75a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM18.375 18.75a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22Z" />
+            );
 
             // --- Reset states when changing tabs ---
             useEffect(() => {
@@ -831,11 +852,18 @@
                         historyUnsubscribeRef.current(); // Unsubscribe previous listener
                     }
                     const historyCollectionRef = window.firebase.collection(db, `artifacts/${__app_id}/users/${userId}/ede_history`);
-                    const q = window.firebase.query(historyCollectionRef, window.firebase.orderBy('timestamp', 'desc'));
+                    // Removed orderBy from query as per instructions to avoid index issues.
+                    const q = window.firebase.query(historyCollectionRef); // No orderBy here
                     
                     historyUnsubscribeRef.current = window.firebase.onSnapshot(q, (snapshot) => {
                         const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                        setHistoryItems(items);
+                        // Sort in memory instead
+                        const sortedItems = items.sort((a, b) => {
+                            const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
+                            const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
+                            return dateB - dateA; // Descending order
+                        });
+                        setHistoryItems(sortedItems);
                     }, (error) => {
                         console.error("Error fetching history:", error);
                         showMessage("Lỗi khi tải lịch sử: " + error.message);
@@ -884,11 +912,9 @@
                                 className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 shadow-md hover:shadow-lg transition-all"
                                 aria-label="Toggle dark mode"
                             >
-                                {darkMode ? (
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                                        <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 0 1 .75 0l.75.22a.75.75 0 0 1 .58.56l.006.048c.03.111.115.196.226.226l.048.006a.75.75 0 0 1 .56.58l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.58.56l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.75-.22a.75.75 0 0 1-.58-.56l-.006-.048a.75.75 0 0 1-.226-.226l-.048-.006a.75.75 0 0 1-.56-.58l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .58-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM12 6a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 12 6ZM12 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 12 15ZM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM3.75 12a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75ZM18 12a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75ZM12 18.75a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5a.75.75 0 0 1 .75-.75ZM5.625 4.5a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM18.375 4.5a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM5.625 18.75a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM18.375 18.75a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22Z" />
-                                    </svg>
-                                )}
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                                    {darkMode ? sunIconPath : moonIconPath}
+                                </svg>
                             </button>
                         </div>
 

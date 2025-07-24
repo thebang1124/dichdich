@@ -167,48 +167,48 @@
             // Dictionary Data with some examples
             const dictionaryData = useMemo(() => [
                 { ede: "Abao", type: "dt", vietnamese: "Ốc bươu", examples: [] },
-                { ede: "Abăn", type: "dt", vietnamese: "Cái chăn (mền). Msăm abăn: Đắp chăn; Abăn hmlei: Chăn bông", examples: [] },
+                { ede: "Abăn", type: "dt", vietnamese: "Cái chăn (mền)", examples: ["Msăm abăn: Đắp chăn", "Abăn hmlei: Chăn bông"] },
                 { ede: "Abŭ", type: "dt", vietnamese: "Cái hũ", examples: [] },
                 { ede: "Adei", type: "dt", vietnamese: "Em", examples: [] },
                 { ede: "Adě", type: "dt", vietnamese: "Hến", examples: [] },
                 { ede: "Adham", type: "dt", vietnamese: "Một nhóm trong tộc người Êđê", examples: [] },
-                { ede: "Adhan", type: "dt", vietnamese: "Cành. Adhan kyão: Cành cây", examples: [] },
-                { ede: "Adhei", type: "dt", vietnamese: "Trán. Adhei bai: Trán rộng", examples: [] },
-                { ede: "Adiê", type: "dt", vietnamese: "Trời. Adiê hjan: Trời mưa", examples: [] },
+                { ede: "Adhan", type: "dt", vietnamese: "Cành", examples: ["Adhan kyão: Cành cây"] },
+                { ede: "Adhei", type: "dt", vietnamese: "Trán", examples: ["Adhei bai: Trán rộng"] },
+                { ede: "Adiê", type: "dt", vietnamese: "Trời", examples: ["Adiê hjan: Trời mưa"] },
                 { ede: "Adiê không", type: "", vietnamese: "Nắng hạn", examples: [] },
                 { ede: "Adiê tlam", type: "", vietnamese: "Xế chiều", examples: [] },
-                { ede: "Adih", type: "đt", vietnamese: "Kia. Sang kâo ti anôk adih: Nhà tôi chỗ kia; Hruê aguah adih kâo đuễ hiu: Sáng ngày kia tôi đi chơi", examples: [] },
-                { ede: "Adôk", type: "đgt", vietnamese: "Còn. Kâo adôk prăk: Tôi còn tiền; Adôk hdĩp: Còn sống", examples: [] },
-                { ede: "Adrăng", type: "dt", vietnamese: "Rơm rạ. Mkăm adrăng: Đống rơm", examples: [] },
-                { ede: "Adring", type: "dt", vietnamese: "Hiên nhà sàn. Amĩ kâo bhu mdiê ti adring: Mẹ tôi phơi lúa ở hiên nhà sàn", examples: [] },
+                { ede: "Adih", type: "đt", vietnamese: "Kia", examples: ["Sang kâo ti anôk adih: Nhà tôi chỗ kia", "Hruê aguah adih kâo đuễ hiu: Sáng ngày kia tôi đi chơi"] },
+                { ede: "Adôk", type: "đgt", vietnamese: "Còn", examples: ["Kâo adôk prăk: Tôi còn tiền", "Adôk hdĩp: Còn sống"] },
+                { ede: "Adrăng", type: "dt", vietnamese: "Rơm rạ", examples: ["Mkăm adrăng: Đống rơm"] },
+                { ede: "Adring", type: "dt", vietnamese: "Hiên nhà sàn", examples: ["Amĩ kâo bhu mdiê ti adring: Mẹ tôi phơi lúa ở hiên nhà sàn"] },
                 { ede: "Adrök", type: "dt", vietnamese: "Con cóc", examples: [] },
                 { ede: "Aduôn", type: "dt", vietnamese: "Bà (nội, ngoại)", examples: [] },
-                { ede: "Adŭ", type: "dt", vietnamese: "1.Phòng. Adŭ pit: Phòng ngủ; Adŭ hriăm: Phòng học. 2. Lớp. Adŭ năm: Lớp 6; Adŭ pluh dua: Lớp 12. 3. Cái ô. Adŭ jũ: Ô màu đen", examples: [] },
+                { ede: "Adŭ", type: "dt", vietnamese: "1.Phòng. Adŭ pit: Phòng ngủ; Adŭ hriăm: Phòng học. 2. Lớp. Adŭ năm: Lớp 6; Adŭ pluh dua: Lớp 12. 3. Cái ô. Adŭ jũ: Ô màu đen", examples: [] }, // Kept as is, as these are distinct meanings.
                 { ede: "Adŭ bruă", type: "dt", vietnamese: "Văn phòng", examples: [] },
                 { ede: "Adŭ git gai bruă kiă kriê", type: "dt", vietnamese: "Phòng hành chính", examples: [] },
-                { ede: "Adŭ tĭng yap", type: "dt", vietnamese: "Phòng kế toán", examples: [] },
-                { ede: "Adŭng", type: "dt", vietnamese: "Mũi. Băng adũng: Lỗ mũi", examples: [] },
+                { ede: "Adŭ tĩng yap", type: "dt", vietnamese: "Phòng kế toán", examples: [] },
+                { ede: "Adŭng", type: "dt", vietnamese: "Mũi", examples: ["Băng adũng: Lỗ mũi"] },
                 { ede: "Aê", type: "dt", vietnamese: "Ông (nội, ngoại)", examples: [] },
                 { ede: "Aê êa drao", type: "dt", vietnamese: "Bác sĩ", examples: [] },
-                { ede: "Aguah", type: "trạng từ", vietnamese: "Buổi sáng. Aguah ưm: Sáng sớm; Aguah mgi: Sáng mai; Aguah mbruê: Sáng hôm qua", examples: [] },
-                { ede: "Ai", type: "dt", vietnamese: "Sức. Ai ktang: Sức mạnh", examples: [] },
-                { ede: "Ajĭk", type: "dt", vietnamese: "Ếch", examples: [] },
-                { ede: "Ak", type: "dt", vietnamese: "Con quạ. Jũ msě si ak: Đen như quạ", examples: [] },
-                { ede: "Akăt", type: "dt", vietnamese: "Bụi (khóm). Akăt kram: Bụi tre", examples: [] },
-                { ede: "Akâo", type: "đgt", vietnamese: "Xin. Akâo prăk: Xin tiền; Akâo êa mnăm: Xin nước uống", examples: [] },
-                { ede: "Ala", type: "dt", vietnamese: "Con rắn. Ala knăl: Rắn giun; Ala mtah: Rắn lục", examples: [] },
-                { ede: "Alah", type: "tt", vietnamese: "Lười biếng. Alah mă bruă: Lười làm việc", examples: [] },
-                { ede: "Ală", type: "dt", vietnamese: "Mắt. Pĩt ală: Nhắm mắt", examples: [] },
+                { ede: "Aguah", type: "trạng từ", vietnamese: "Buổi sáng", examples: ["Aguah ưm: Sáng sớm", "Aguah mgi: Sáng mai", "Aguah mbruê: Sáng hôm qua"] },
+                { ede: "Ai", type: "dt", vietnamese: "Sức", examples: ["Ai ktang: Sức mạnh"] },
+                { ede: "Ajik", type: "dt", vietnamese: "Ếch", examples: [] },
+                { ede: "Ak", type: "dt", vietnamese: "Con quạ", examples: ["Jũ msě si ak: Đen như quạ"] },
+                { ede: "Akăt", type: "dt", vietnamese: "Bụi (khóm)", examples: ["Akăt kram: Bụi tre"] },
+                { ede: "Akâo", type: "đgt", vietnamese: "Xin", examples: ["Akâo prăk: Xin tiền", "Akâo êa mnăm: Xin nước uống"] },
+                { ede: "Ala", type: "dt", vietnamese: "Con rắn", examples: ["Ala knăl: Rắn giun", "Ala mtah: Rắn lục"] },
+                { ede: "Alah", type: "tt", vietnamese: "Lười biếng", examples: ["Alah mă bruă: Lười làm việc"] },
+                { ede: "Ală", type: "dt", vietnamese: "Mắt", examples: ["Pĩt ală: Nhắm mắt"] },
                 { ede: "Ama", type: "dt", vietnamese: "Bố (cha)", examples: [] },
                 { ede: "Amai", type: "dt", vietnamese: "Chị", examples: [] },
-                { ede: "Amâo", type: "pht", vietnamese: "Không. Amâo mâo: Không có", examples: [] },
-                { ede: "Amĭ", type: "dt", vietnamese: "Mẹ (má)", examples: [] },
+                { ede: "Amâo", type: "pht", vietnamese: "Không", examples: ["Amâo mâo: Không có"] },
+                { ede: "Ami", type: "dt", vietnamese: "Mẹ (má)", examples: [] },
                 { ede: "Ana", type: "dt", vietnamese: "Cây. (tt): Giống cái (động vật). Ɇmô ana: Bò cái", examples: ["Hlăm hma, awa pla lu ana boh kroh. - Trong rẫy, bác trồng nhiều loại cây ăn trái.", "Ɇmô ana sang aê mrâo mdai. - Bò cái nhà ông mới đẻ."] },
                 { ede: "Anak", type: "dt", vietnamese: "Con (người)", examples: [] },
                 { ede: "Anăn", type: "dt", vietnamese: "Tên. (đt): Đó, đấy", examples: [] },
-                { ede: "Anei", type: "đt", vietnamese: "Đây. Kâo mă bruă ti anei: Tôi làm việc ở đây", examples: [] },
-                { ede: "Anôk", type: "dt", vietnamese: "Nơi, chỗ, vị trí. Djõ anôk: Đúng vị trí", examples: [] },
-                { ede: "Ao", type: "dt", vietnamese: "Áo. Ao kỗ: Áo trắng. Ao hjan: Áo mưa", examples: [] },
+                { ede: "Anei", type: "đt", vietnamese: "Đây", examples: ["Kâo mă bruă ti anei: Tôi làm việc ở đây"] },
+                { ede: "Anôk", type: "dt", vietnamese: "Nơi, chỗ, vị trí", examples: ["Djõ anôk: Đúng vị trí"] },
+                { ede: "Ao", type: "dt", vietnamese: "Áo", examples: ["Ao kỗ: Áo trắng", "Ao hjan: Áo mưa"] },
                 { ede: "Arăng", type: "đt", vietnamese: "Người ta", examples: ["Kâo dlăng arăng bị lông đi čữ. - Tôi xem người ta thi leo núi."] },
                 { ede: "Asăr", type: "dt", vietnamese: "Hạt, hột. Asăr mdiê: Hạt lúa", examples: ["Boh čên anei lu asăr. - Quả chanh này nhiều hột.", "Mdiê bi asăr êdi. - Lúa rất chắc hạt."] },
                 { ede: "Asâo", type: "dt", vietnamese: "Con chó", examples: [] },
@@ -227,10 +227,10 @@
                 { ede: "Djam", type: "dt", vietnamese: "Rau, canh", examples: [] },
                 { ede: "Djă", type: "đgt", vietnamese: "Cầm, giữ", examples: [] },
                 { ede: "Drei", type: "đt", vietnamese: "Chúng ta, ta; (tl) con (dùng đếm con vật)", examples: [] },
-                { ede: "Êa", type: "dt", vietnamese: "Nước", examples: [] },
-                { ede: "Êdeh", type: "dt", vietnamese: "Xe", examples: ["Tơ nao mă bruă, kâo khăng đi êdeh pơ phút. - Khi đi làm, tôi thường đi xe máy."] },
-                { ede: "Êmô", type: "dt", vietnamese: "Con bò", examples: [] },
-                { ede: "Êsei", type: "dt", vietnamese: "Cơm", examples: [] },
+                { ede: "Ɇa", type: "dt", vietnamese: "Nước", examples: [] },
+                { ede: "Ɇdeh", type: "dt", vietnamese: "Xe", examples: ["Tơ nao mă bruă, kâo khăng đi êdeh pơ phút. - Khi đi làm, tôi thường đi xe máy."] },
+                { ede: "Ɇmô", type: "dt", vietnamese: "Con bò", examples: [] },
+                { ede: "Ɇsei", type: "dt", vietnamese: "Cơm", examples: [] },
                 { ede: "Hriăm", type: "đgt", vietnamese: "Học", examples: [] },
                 { ede: "Hruê", type: "dt", vietnamese: "Ngày", examples: ["Hruê mdei, kâo hiu chưn hồng bằng gặp. - Ngày nghỉ, tôi đi chơi với bạn."] },
                 { ede: "Huă", type: "đgt", vietnamese: "Ăn (cơm)", examples: [] },
@@ -252,17 +252,17 @@
                 { ede: "Mnŭ", type: "dt", vietnamese: "Con gà", examples: [] },
                 { ede: "Nao", type: "đgt", vietnamese: "Đi", examples: [] },
                 { ede: "Ñu", type: "đt", vietnamese: "Nó, ông ấy, bà ấy (ngôi thứ 3 số ít)", examples: [] },
-                { ede: "Pla", type: "đgt", vietnamese: "Trồng, cấy", examples: ["Hlăm hma, awa pla lu ana boh kroh. - Trong rẫy, bác trồng nhiều loại cây ăn trái."] },
+                { ede: "Pla", type: "đgt", vietnamese: "Trồng, cấy", examples: [] },
                 { ede: "Prăk", type: "dt", vietnamese: "Tiền, bạc", examples: [] },
                 { ede: "Ruă", type: "đgt", vietnamese: "Đau, ốm", examples: ["Amũ kâo ruă aruăt ariêng. - Mẹ tôi đau gân cốt."] },
                 { ede: "Sang", type: "dt", vietnamese: "Nhà", examples: ["Sang kâo ngã hõng kyâo. - Nhà tôi làm bằng gỗ."] },
                 { ede: "Siam", type: "tt", vietnamese: "Đẹp", examples: [] },
                 { ede: "Thâo", type: "đgt", vietnamese: "Biết", examples: [] },
                 { ede: "Thuôn", type: "dt", vietnamese: "Năm, tuổi", examples: [] },
-                { ede: "ŭn", type: "dt", vietnamese: "Lợn, heo", examples: [] },
+                { ede: "Ʉn", type: "dt", vietnamese: "Lợn, heo", examples: [] },
                 { ede: "Aruăt", type: "dt", vietnamese: "Gân, sợi", examples: ["Amũ kâo ruă aruăt ariêng. - Mẹ tôi đau gân cốt.", "Amai blei dua aruăt klei mah. - Chị mua hai sợi dây chuyền vàng."] },
                 { ede: "Čar", type: "dt", vietnamese: "Tỉnh, chẻ", examples: ["Čar Dak Lak pla lu kphê. - Tỉnh Đắk Lắk trồng nhiều cà phê.", "Aê dôk čar mnũng. - Ông đang chẻ lạt."] },
-                { ede: "Đĭ", type: "đgt", vietnamese: "Leo, trèo, cưỡi, đi", examples: ["Kâo dlăng arăng bị lông đi čữ. - Tôi xem người ta thi leo núi.", "Tơ nao mă bruă, kâo khăng đi êdeh pơ phút. - Khi đi làm, tôi thường đi xe máy.", "Hruê mdei, kâo hiu chưn hồng bằng gặp. - Ngày nghỉ, tôi đi chơi với bạn."] }
+                { ede: "Đi", type: "đgt", vietnamese: "Leo, trèo, cưỡi, đi", examples: ["Kâo dlăng arăng bị lông đi čữ. - Tôi xem người ta thi leo núi.", "Tơ nao mă bruă, kâo khăng đi êdeh pơ phút. - Khi đi làm, tôi thường đi xe máy.", "Hruê mdei, kâo hiu chưn hồng bằng gặp. - Ngày nghỉ, tôi đi chơi với bạn."] }
             ], []);
 
             const showMessage = (msg) => {
@@ -451,6 +451,15 @@
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(payload)
                         });
+
+                        if (!response.ok) {
+                            const errorDetails = response.statusText || `Lỗi không xác định (Mã: ${response.status})`;
+                            if (response.status === 403) {
+                                throw new Error(`Lỗi API: Quyền truy cập bị từ chối (Mã: 403). Vui lòng kiểm tra cấu hình API key.`);
+                            }
+                            throw new Error(`Lỗi API dịch văn bản: ${errorDetails}`);
+                        }
+
                         const result = await response.json();
                         if (result.candidates && result.candidates.length > 0 &&
                             result.candidates[0].content && result.candidates[0].content.parts &&
@@ -470,7 +479,7 @@
                     }
                 } catch (error) {
                     console.error("Lỗi khi dịch:", error);
-                    showMessage("Đã xảy ra lỗi khi dịch từ.");
+                    showMessage("Đã xảy ra lỗi khi dịch từ: " + error.message);
                     setVietnameseMeaning("Đã xảy ra lỗi khi dịch từ.");
                     setShowGenerateExampleButton(false);
                 } finally {
@@ -498,6 +507,15 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
+
+                    if (!response.ok) {
+                        const errorDetails = response.statusText || `Lỗi không xác định (Mã: ${response.status})`;
+                        if (response.status === 403) {
+                            throw new Error(`Lỗi API: Quyền truy cập bị từ chối (Mã: 403). Vui lòng kiểm tra cấu hình API key.`);
+                        }
+                        throw new Error(`Lỗi API tạo ví dụ: ${errorDetails}`);
+                    }
+
                     const result = await response.json();
                     if (result.candidates && result.candidates.length > 0 &&
                         result.candidates[0].content && result.candidates[0].content.parts &&
@@ -509,7 +527,7 @@
                     }
                 } catch (error) {
                     console.error("Lỗi khi tạo ví dụ:", error);
-                    showMessage("Đã xảy ra lỗi khi tạo ví dụ.");
+                    showMessage("Đã xảy ra lỗi khi tạo ví dụ: " + error.message);
                     setExampleSentence("Đã xảy ra lỗi khi tạo ví dụ.");
                 } finally {
                     setIsLoadingExample(false);
@@ -572,6 +590,9 @@
 
                     if (!responseExtract.ok) {
                         const errorDetails = responseExtract.statusText || `Lỗi không xác định (Mã: ${responseExtract.status})`;
+                        if (responseExtract.status === 403) {
+                            throw new Error(`Lỗi API: Quyền truy cập bị từ chối (Mã: 403). Vui lòng kiểm tra cấu hình API key.`);
+                        }
                         throw new Error(`Lỗi API trích xuất văn bản: ${errorDetails}`);
                     }
 
@@ -597,6 +618,9 @@
 
                         if (!responseTranslate.ok) {
                             const errorDetails = responseTranslate.statusText || `Lỗi không xác định (Mã: ${responseTranslate.status})`;
+                            if (responseTranslate.status === 403) {
+                                throw new Error(`Lỗi API: Quyền truy cập bị từ chối (Mã: 403). Vui lòng kiểm tra cấu hình API key.`);
+                            }
                             throw new Error(`Lỗi API dịch văn bản: ${errorDetails}`);
                         }
 
@@ -643,6 +667,9 @@
 
                     if (!response.ok) {
                         const errorDetails = response.statusText || `Lỗi không xác định (Mã: ${response.status})`;
+                        if (response.status === 403) {
+                            throw new Error(`Lỗi API: Quyền truy cập bị từ chối (Mã: 403). Vui lòng kiểm tra cấu hình API key.`);
+                        }
                         throw new Error(`Lỗi API tạo đoạn văn: ${errorDetails}`);
                     }
 
@@ -709,6 +736,15 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
+
+                    if (!response.ok) {
+                        const errorDetails = response.statusText || `Lỗi không xác định (Mã: ${response.status})`;
+                        if (response.status === 403) {
+                            throw new Error(`Lỗi API: Quyền truy cập bị từ chối (Mã: 403). Vui lòng kiểm tra cấu hình API key.`);
+                        }
+                        throw new Error(`Lỗi API giải thích: ${errorDetails}`);
+                    }
+
                     const result = await response.json();
                     if (result.candidates && result.candidates.length > 0 &&
                         result.candidates[0].content && result.candidates[0].content.parts &&
@@ -719,7 +755,7 @@
                     }
                 } catch (error) {
                     console.error("Lỗi khi giải thích:", error);
-                    showMessage("Đã xảy ra lỗi khi giải thích.");
+                    showMessage("Đã xảy ra lỗi khi giải thích: " + error.message);
                     setGeneratedExplanation("Đã xảy ra lỗi khi giải thích.");
                 } finally {
                     setIsLoadingExplanation(false);
@@ -1304,28 +1340,4 @@
                             </div>
                         )}
                     </div>
-                    <MessageModal message={message} onClose={closeMessage} />
-                </div>
-            );
-        }
-
-        const TabButton = ({ tabName, activeTab, setActiveTab, children, disabled = false }) => (
-            <button
-                onClick={() => setActiveTab(tabName)}
-                disabled={disabled}
-                className={`px-4 py-2 text-lg font-medium rounded-t-lg transition-colors duration-200
-                    ${activeTab === tabName
-                        ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-500 dark:border-indigo-400'
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border-b-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
-                    }
-                    ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-                `}
-            >
-                {children}
-            </button>
-        );
-
-        ReactDOM.render(<App />, document.getElementById('root'));
-    </script>
-</body>
-</html>
+                    <MessageModal message={message} onClose={closeMe

@@ -77,11 +77,12 @@
 
     <!-- Firebase SDKs -->
     <script type="module">
+        // Import necessary Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, addDoc, getDocs, onSnapshot, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Expose Firebase objects globally for the Babel script
+        // Expose Firebase objects globally for the Babel script to access
         window.firebase = {
             initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut,
             getFirestore, collection, doc, addDoc, getDocs, onSnapshot, query, serverTimestamp
@@ -90,11 +91,12 @@
 
     <!-- React App Code -->
     <script type="text/babel">
+        // Destructure React hooks for easier use
         const { useState, useEffect, useMemo, useRef } = React;
 
-        // MessageModal Component for displaying messages
+        // MessageModal Component for displaying messages to the user (instead of alert())
         const MessageModal = ({ message, onClose }) => {
-            if (!message) return null;
+            if (!message) return null; // Don't render if no message
             return (
                 <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4 dark:bg-gray-700 dark:text-white">
@@ -110,61 +112,67 @@
             );
         };
 
+        // Main App Component
         function App() {
+            // State for dark mode toggle
             const [darkMode, setDarkMode] = useState(false);
-            const [activeTab, setActiveTab] = useState('translate'); // 'translate', 'image', 'generate', 'explain', 'history', 'user'
+            // State to manage active tab in the UI
+            const [activeTab, setActiveTab] = useState('translate'); // Default tab is 'translate'
+            // State for displaying modal messages
             const [message, setMessage] = useState('');
 
-            // Firebase States
+            // Firebase States for database, authentication, and user info
             const [db, setDb] = useState(null);
             const [auth, setAuth] = useState(null);
             const [userId, setUserId] = useState(null);
             const [isAuthenticated, setIsAuthenticated] = useState(false);
-            const [authLoading, setAuthLoading] = useState(true);
+            const [authLoading, setAuthLoading] = useState(true); // To show loading state during Firebase init
 
             // Translation States
-            const [edeWord, setEdeWord] = useState('');
-            const [vietnameseMeaning, setVietnameseMeaning] = useState('');
-            const [isLoadingTextTranslate, setIsLoadingTextTranslate] = useState(false);
-            const [showGenerateExampleButton, setShowGenerateExampleButton] = useState(false);
-            const [exampleSentence, setExampleSentence] = useState('');
-            const [isLoadingExample, setIsLoadingExample] = useState(false);
+            const [edeWord, setEdeWord] = useState(''); // Input for translation
+            const [vietnameseMeaning, setVietnameseMeaning] = useState(''); // Output of translation
+            const [isLoadingTextTranslate, setIsLoadingTextTranslate] = useState(false); // Loading indicator for text translation
+            const [showGenerateExampleButton, setShowGenerateExampleButton] = useState(false); // To show/hide example generation button
+            const [exampleSentence, setExampleSentence] = useState(''); // Example sentence output
+            const [isLoadingExample, setIsLoadingExample] = useState(false); // Loading indicator for example generation
             const [translationDirection, setTranslationDirection] = useState('edeToViet'); // 'edeToViet' or 'vietToEde'
 
             // Image Translation States
-            const [imageSrc, setImageSrc] = useState(null);
-            const [imageFile, setImageFile] = useState(null); // Store the file object to get its type
-            const [extractedText, setExtractedText] = useState('');
-            const [imageTranslation, setImageTranslation] = useState('');
-            const [isLoadingImageTranslate, setIsLoadingImageTranslate] = useState(false);
+            const [imageSrc, setImageSrc] = useState(null); // Base64 string of the uploaded image
+            const [imageFile, setImageFile] = useState(null); // File object to get MIME type
+            const [extractedText, setExtractedText] = useState(''); // Text extracted from image
+            const [imageTranslation, setImageTranslation] = useState(''); // Translation of extracted text
+            const [isLoadingImageTranslate, setIsLoadingImageTranslate] = useState(false); // Loading indicator for image translation
 
             // Paragraph Generation States
-            const [paragraphPrompt, setParagraphPrompt] = useState('');
-            const [generatedParagraph, setGeneratedParagraph] = useState('');
-            const [isLoadingParagraph, setIsLoadingParagraph] = useState(false);
+            const [paragraphPrompt, setParagraphPrompt] = useState(''); // User's prompt for paragraph
+            const [generatedParagraph, setGeneratedParagraph] = useState(''); // Generated paragraph
+            const [isLoadingParagraph, setIsLoadingParagraph] = useState(false); // Loading indicator for paragraph generation
 
             // Explanation States
-            const [explanationWord, setExplanationWord] = useState('');
-            const [generatedExplanation, setGeneratedExplanation] = useState('');
-            const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
+            const [explanationWord, setExplanationWord] = useState(''); // Word/concept to explain
+            const [generatedExplanation, setGeneratedExplanation] = useState(''); // Generated explanation
+            const [isLoadingExplanation, setIsLoadingExplanation] = useState(false); // Loading indicator for explanation generation
 
             // Speech-to-Text States
-            const [speechRecognitionText, setSpeechRecognitionText] = useState('');
-            const [isRecording, setIsRecording] = useState(false);
+            const [speechRecognitionText, setSpeechRecognitionText] = useState(''); // Recognized text from speech
+            const [isRecording, setIsRecording] = useState(false); // Recording status
             const recognitionRef = useRef(null); // Ref for SpeechRecognition object
 
             // Text-to-Speech States
-            const [speechSynthesisText, setSpeechSynthesisText] = useState('');
-            const [isSpeaking, setIsSpeaking] = useState(false);
-            const [voices, setVoices] = useState([]);
-            const [selectedVoice, setSelectedVoice] = useState(null);
+            const [speechSynthesisText, setSpeechSynthesisText] = useState(''); // Text to be spoken
+            const [isSpeaking, setIsSpeaking] = useState(false); // Speaking status
+            const [voices, setVoices] = useState([]); // Available voices for TTS
+            const [selectedVoice, setSelectedVoice] = useState(null); // Currently selected voice
             const synthRef = useRef(null); // Ref for SpeechSynthesis object
 
             // History States
-            const [historyItems, setHistoryItems] = useState([]);
-            const historyUnsubscribeRef = useRef(null);
+            const [historyItems, setHistoryItems] = useState([]); // List of historical interactions
+            const historyUnsubscribeRef = useRef(null); // Ref to unsubscribe from Firestore listener
 
-            // Dictionary Data with some examples
+            // Dictionary Data (internal, hardcoded for demonstration)
+            // This data is used for direct dictionary lookups before resorting to AI translation.
+            // Examples are included where available.
             const dictionaryData = useMemo(() => [
                 { ede: "Abao", type: "dt", vietnamese: "Ốc bươu", examples: [] },
                 { ede: "Abăn", type: "dt", vietnamese: "Cái chăn (mền)", examples: ["Msăm abăn: Đắp chăn", "Abăn hmlei: Chăn bông"] },
@@ -259,24 +267,27 @@
                 { ede: "Siam", type: "tt", vietnamese: "Đẹp", examples: [] },
                 { ede: "Thâo", type: "đgt", vietnamese: "Biết", examples: [] },
                 { ede: "Thuôn", type: "dt", vietnamese: "Năm, tuổi", examples: [] },
-                { ede: "ŭn", type: "dt", vietnamese: "Lợn, heo", examples: [] },
+                { ede: "Ʉn", type: "dt", vietnamese: "Lợn, heo", examples: [] },
                 { ede: "Aruăt", type: "dt", vietnamese: "Gân, sợi", examples: ["Amũ kâo ruă aruăt ariêng. - Mẹ tôi đau gân cốt.", "Amai blei dua aruăt klei mah. - Chị mua hai sợi dây chuyền vàng."] },
                 { ede: "Čar", type: "dt", vietnamese: "Tỉnh, chẻ", examples: ["Čar Dak Lak pla lu kphê. - Tỉnh Đắk Lắk trồng nhiều cà phê.", "Aê dôk čar mnũng. - Ông đang chẻ lạt."] },
                 { ede: "Đĭ", type: "đgt", vietnamese: "Leo, trèo, cưỡi, đi", examples: ["Kâo dlăng arăng bị lông đi čữ. - Tôi xem người ta thi leo núi.", "Tơ nao mă bruă, kâo khăng đi êdeh pơ phút. - Khi đi làm, tôi thường đi xe máy.", "Hruê mdei, kâo hiu chưn hồng bằng gặp. - Ngày nghỉ, tôi đi chơi với bạn."] }
             ], []);
 
+            // Function to display a modal message
             const showMessage = (msg) => {
                 setMessage(msg);
             };
 
+            // Function to close the modal message
             const closeMessage = () => {
                 setMessage('');
             };
 
-            // --- Firebase Initialization and Auth ---
+            // --- Firebase Initialization and Authentication ---
             useEffect(() => {
                 const initializeFirebase = async () => {
                     try {
+                        // Retrieve Firebase config and app ID from global variables provided by the environment
                         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
                         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
@@ -286,21 +297,28 @@
                             return;
                         }
 
+                        // Initialize Firebase app, Auth, and Firestore instances
                         const app = window.firebase.initializeApp(firebaseConfig);
                         const authInstance = window.firebase.getAuth(app);
                         const firestoreInstance = window.firebase.getFirestore(app);
 
-                        setDb(firestoreInstance);
+                        setDb(firestoreInstance); // Set Firestore instance to state
+                        setAuth(authInstance); // Set Auth instance to state
 
+                        // Listen for authentication state changes
                         window.firebase.onAuthStateChanged(authInstance, async (user) => {
                             if (user) {
+                                // User is signed in
                                 setUserId(user.uid);
                                 setIsAuthenticated(true);
                             } else {
+                                // User is signed out, attempt anonymous or custom token sign-in
                                 try {
                                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                                        // Sign in with custom token if available
                                         await window.firebase.signInWithCustomToken(authInstance, __initial_auth_token);
                                     } else {
+                                        // Fallback to anonymous sign-in
                                         await window.firebase.signInAnonymously(authInstance);
                                     }
                                 } catch (error) {
@@ -308,7 +326,7 @@
                                     showMessage("Lỗi đăng nhập: " + error.message);
                                 }
                             }
-                            setAuthLoading(false);
+                            setAuthLoading(false); // Authentication process completed
                         });
                     } catch (error) {
                         console.error("Error initializing Firebase:", error);
@@ -317,22 +335,23 @@
                     }
                 };
                 initializeFirebase();
-            }, []);
+            }, []); // Empty dependency array means this effect runs once on mount
 
             // --- Dark Mode Toggle ---
             useEffect(() => {
+                // Add or remove 'dark' class from the document element based on darkMode state
                 if (darkMode) {
                     document.documentElement.classList.add('dark');
                 } else {
                     document.documentElement.classList.remove('dark');
                 }
-            }, [darkMode]);
+            }, [darkMode]); // Rerun when darkMode state changes
 
             const toggleDarkMode = () => {
                 setDarkMode(!darkMode);
             };
 
-            // Define SVG paths as variables
+            // SVG paths for sun and moon icons (for dark mode toggle)
             const sunIconPath = (
                 <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 0 1 .75 0l.75.22a.75.75 0 0 1 .58.56l.006.048c.03.111.115.196.226.226l.048.006a.75.75 0 0 1 .56.58l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.58.56l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.75-.22a.75.75 0 0 1-.58-.56l-.006-.048a.75.75 0 0 1-.226-.226l-.048-.006a.75.75 0 0 1-.56-.58l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .58-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM12 6a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 12 6ZM12 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 12 15ZM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM3.75 12a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75ZM18 12a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75ZM12 18.75a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5a.75.75 0 0 1 .75-.75ZM5.625 4.5a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM18.375 4.5a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM5.625 18.75a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22ZM18.375 18.75a.75.75 0 0 1 .56-.56l.75-.22a.75.75 0 0 1 .75 0l.22.75a.75.75 0 0 1 0 .75l-.22.75a.75.75 0 0 1-.56.58l-.048.006a.75.75 0 0 1-.226.226l-.006.048a.75.75 0 0 1-.56.58l-.75.22a.75.75 0 0 1-.75 0l-.22-.75a.75.75 0 0 1 0-.75l.22-.75a.75.75 0 0 1 .56-.56l.048-.006a.75.75 0 0 1 .226-.226l.006-.048a.75.75 0 0 1 .56-.58l.75-.22Z" clipRule="evenodd" />
             );
@@ -342,15 +361,15 @@
             );
 
             // --- Reset states when changing tabs ---
+            // This ensures a clean slate when switching between different functionalities.
             useEffect(() => {
-                // Reset all states related to content/inputs when tab changes
                 setEdeWord('');
                 setVietnameseMeaning('');
                 setIsLoadingTextTranslate(false);
                 setShowGenerateExampleButton(false);
                 setExampleSentence('');
                 setIsLoadingExample(false);
-                setTranslationDirection('edeToViet'); // Reset translation direction
+                setTranslationDirection('edeToViet'); // Reset translation direction to default
 
                 setImageSrc(null);
                 setImageFile(null); // Clear image file
@@ -369,30 +388,30 @@
                 setSpeechRecognitionText('');
                 setIsRecording(false);
                 if (recognitionRef.current) {
-                    recognitionRef.current.stop();
+                    recognitionRef.current.stop(); // Stop any ongoing speech recognition
                 }
 
                 setSpeechSynthesisText('');
                 setIsSpeaking(false);
                 if (synthRef.current) {
-                    synthRef.current.cancel();
+                    synthRef.current.cancel(); // Stop any ongoing speech synthesis
                 }
                 setSelectedVoice(null); // Reset selected voice
 
                 setMessage(''); // Clear any modal messages
-            }, [activeTab]);
+            }, [activeTab]); // Effect runs whenever activeTab changes
 
 
             // --- Text Translation Logic ---
             const handleInputChange = (event) => {
                 const input = event.target.value;
-                setEdeWord(input); // edeWord state now holds the input for both directions
+                setEdeWord(input); // Update input word state
                 setExampleSentence(''); // Clear example when input changes
-                setShowGenerateExampleButton(false); // Hide button
+                setShowGenerateExampleButton(false); // Hide example button
                 if (input.trim() === '') {
-                    setVietnameseMeaning('');
+                    setVietnameseMeaning(''); // Clear meaning if input is empty
                 } else {
-                    translateWord(input, translationDirection);
+                    translateWord(input, translationDirection); // Trigger translation
                 }
             };
 
@@ -409,6 +428,7 @@
 
                 try {
                     if (direction === 'edeToViet') {
+                        // Search in internal dictionary (Êđê to Việt)
                         foundEntry = dictionaryData.find(entry => entry.ede.toLowerCase() === lowerCaseWord);
                         if (foundEntry) {
                             translatedText = `(${foundEntry.type}) ${foundEntry.vietnamese} (Từ điển nội bộ)`;
@@ -416,12 +436,14 @@
                                 setExampleSentence(foundEntry.examples.join('\n'));
                             } else {
                                 setExampleSentence('Không có ví dụ trong từ điển.');
-                                setShowGenerateExampleButton(true);
+                                setShowGenerateExampleButton(true); // Allow AI example generation
                             }
                         } else {
+                            // If not found in dictionary, prepare prompt for AI translation
                             prompt = `Dịch từ Êđê sau sang tiếng Việt: "${word}". Chỉ trả về bản dịch thuần túy, không có giải thích hay định dạng gì thêm. Nếu không biết, hãy trả lời "Không tìm thấy".`;
                         }
                     } else { // direction === 'vietToEde'
+                        // Search in internal dictionary (Việt to Êđê)
                         foundEntry = dictionaryData.find(entry => entry.vietnamese.toLowerCase().includes(lowerCaseWord));
                         if (foundEntry) {
                             translatedText = `${foundEntry.ede} (Từ điển nội bộ)`;
@@ -429,22 +451,24 @@
                                 setExampleSentence(foundEntry.examples.join('\n'));
                             } else {
                                 setExampleSentence('Không có ví dụ trong từ điển.');
-                                setShowGenerateExampleButton(true);
+                                setShowGenerateExampleButton(true); // Allow AI example generation
                             }
                         } else {
+                            // If not found in dictionary, prepare prompt for AI translation
                             prompt = `Dịch từ tiếng Việt sau sang tiếng Êđê: "${word}". Chỉ trả về bản dịch thuần túy, không có giải thích hay định dạng gì thêm. Nếu không biết, hãy trả lời "Không tìm thấy".`;
                         }
                     }
 
                     if (foundEntry) {
                         setVietnameseMeaning(translatedText);
-                        setShowGenerateExampleButton(direction === 'edeToViet' || foundEntry.examples.length === 0); // Allow example generation for AI-translated or no-example dict words
+                        // Show example button if it's an Ede-to-Viet translation or if the dictionary entry had no examples
+                        setShowGenerateExampleButton(direction === 'edeToViet' || (foundEntry.examples && foundEntry.examples.length === 0));
                     } else {
                         // Use AI for translation if not found in dictionary
                         let chatHistory = [];
                         chatHistory.push({ role: "user", parts: [{ text: prompt }] });
                         const payload = { contents: chatHistory };
-                        const apiKey = ""; 
+                        const apiKey = ""; // API key is automatically provided by the Canvas environment
                         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
                         const response = await fetch(apiUrl, {
                             method: 'POST',
@@ -452,6 +476,7 @@
                             body: JSON.stringify(payload)
                         });
 
+                        // Handle API response
                         if (!response.ok) {
                             const errorDetails = response.statusText || `Lỗi không xác định (Mã: ${response.status})`;
                             if (response.status === 403) {
@@ -470,7 +495,8 @@
                                 setShowGenerateExampleButton(false);
                             } else {
                                 setVietnameseMeaning(`${text} (Dịch bởi AI)`);
-                                setShowGenerateExampleButton(direction === 'edeToViet'); // Only show example button if original input was Ede
+                                // Only show example button if original input was Ede and translated by AI
+                                setShowGenerateExampleButton(direction === 'edeToViet');
                             }
                         } else {
                             setVietnameseMeaning("Không thể dịch từ này bằng AI.");
@@ -483,10 +509,11 @@
                     setVietnameseMeaning("Đã xảy ra lỗi khi dịch từ.");
                     setShowGenerateExampleButton(false);
                 } finally {
-                    setIsLoadingTextTranslate(false);
+                    setIsLoadingTextTranslate(false); // Hide loading indicator
                 }
             };
 
+            // Function to generate an example sentence using AI
             const generateExampleSentence = async () => {
                 if (!edeWord.trim()) {
                     showMessage("Vui lòng nhập từ tiếng Êđê để tạo ví dụ.");
@@ -500,7 +527,7 @@
                     let chatHistory = [];
                     chatHistory.push({ role: "user", parts: [{ text: prompt }] });
                     const payload = { contents: chatHistory };
-                    const apiKey = ""; 
+                    const apiKey = ""; // API key is automatically provided by the Canvas environment
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
                     const response = await fetch(apiUrl, {
                         method: 'POST',
@@ -508,6 +535,7 @@
                         body: JSON.stringify(payload)
                     });
 
+                    // Handle API response
                     if (!response.ok) {
                         const errorDetails = response.statusText || `Lỗi không xác định (Mã: ${response.status})`;
                         if (response.status === 403) {
@@ -530,10 +558,11 @@
                     showMessage("Đã xảy ra lỗi khi tạo ví dụ: " + error.message);
                     setExampleSentence("Đã xảy ra lỗi khi tạo ví dụ.");
                 } finally {
-                    setIsLoadingExample(false);
+                    setIsLoadingExample(false); // Hide loading indicator
                 }
             };
 
+            // Function to toggle translation direction
             const toggleTranslationDirection = () => {
                 setTranslationDirection(prevDirection => {
                     const newDirection = prevDirection === 'edeToViet' ? 'vietToEde' : 'edeToViet';
@@ -550,14 +579,14 @@
             const handleImageUpload = (event) => {
                 const file = event.target.files[0];
                 if (file) {
-                    setImageFile(file); // Store the file object
+                    setImageFile(file); // Store the file object to get its MIME type later
                     const reader = new FileReader();
                     reader.onload = (e) => {
-                        setImageSrc(e.target.result);
-                        setExtractedText('');
-                        setImageTranslation('');
+                        setImageSrc(e.target.result); // Set image source for display
+                        setExtractedText(''); // Clear previous extracted text
+                        setImageTranslation(''); // Clear previous translation
                     };
-                    reader.readAsDataURL(file);
+                    reader.readAsDataURL(file); // Read file as Data URL (base64)
                 }
             };
 
@@ -571,15 +600,17 @@
                 setImageTranslation('');
 
                 try {
-                    const base64ImageData = imageSrc.split(',')[1];
+                    const base64ImageData = imageSrc.split(',')[1]; // Extract base64 data
                     const mimeType = imageFile.type; // Get MIME type from the file object
+
+                    // Step 1: Extract text from image using AI
                     const extractPrompt = "Trích xuất tất cả văn bản tiếng Êđê từ hình ảnh này. Chỉ trả về văn bản thuần túy, không có giải thích hay định dạng gì thêm.";
                     let chatHistoryExtract = [];
                     chatHistoryExtract.push({ role: "user", parts: [{ text: extractPrompt }] });
                     chatHistoryExtract.push({ role: "user", parts: [{ inline_data: { mime_type: mimeType, data: base64ImageData } }] });
 
                     const payloadExtract = { contents: chatHistoryExtract };
-                    const apiKey = ""; 
+                    const apiKey = ""; // API key is automatically provided by the Canvas environment
                     const apiUrlExtract = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
                     
                     const responseExtract = await fetch(apiUrlExtract, {
@@ -588,6 +619,7 @@
                         body: JSON.stringify(payloadExtract)
                     });
 
+                    // Handle API response for text extraction
                     if (!responseExtract.ok) {
                         const errorDetails = responseExtract.statusText || `Lỗi không xác định (Mã: ${responseExtract.status})`;
                         if (responseExtract.status === 403) {
@@ -603,6 +635,7 @@
                     }
                     setExtractedText(extractedTextFromImage);
 
+                    // Step 2: Translate extracted text if successful
                     if (extractedTextFromImage && extractedTextFromImage.trim() !== "" && extractedTextFromImage !== "Không thể trích xuất văn bản.") {
                         const translatePrompt = `Dịch đoạn văn tiếng Êđê sau sang tiếng Việt: "${extractedTextFromImage}". Chỉ trả về bản dịch thuần túy, không có giải thích hay định dạng gì thêm.`;
                         let chatHistoryTranslate = [];
@@ -616,6 +649,7 @@
                             body: JSON.stringify(payloadTranslate)
                         });
 
+                        // Handle API response for translation
                         if (!responseTranslate.ok) {
                             const errorDetails = responseTranslate.statusText || `Lỗi không xác định (Mã: ${responseTranslate.status})`;
                             if (responseTranslate.status === 403) {
@@ -640,7 +674,7 @@
                     setExtractedText("Đã xảy ra lỗi khi trích xuất văn bản từ ảnh.");
                     setImageTranslation("Đã xảy ra lỗi khi dịch văn bản từ ảnh.");
                 } finally {
-                    setIsLoadingImageTranslate(false);
+                    setIsLoadingImageTranslate(false); // Hide loading indicator
                 }
             };
 
@@ -651,13 +685,13 @@
                     return;
                 }
                 setIsLoadingParagraph(true);
-                setGeneratedParagraph('Đang tạo đoạn văn...');
+                setGeneratedParagraph('Đang tạo đoạn văn...'); // Set loading message
                 try {
                     const prompt = `Viết một đoạn văn ngắn bằng tiếng Êđê về chủ đề: "${paragraphPrompt}". Độ dài khoảng 3-5 câu. Đảm bảo ngữ pháp và từ vựng chính xác.`;
                     let chatHistory = [];
                     chatHistory.push({ role: "user", parts: [{ text: prompt }] });
                     const payload = { contents: chatHistory };
-                    const apiKey = ""; 
+                    const apiKey = ""; // API key is automatically provided by the Canvas environment
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
                     const response = await fetch(apiUrl, {
                         method: 'POST',
@@ -665,6 +699,7 @@
                         body: JSON.stringify(payload)
                     });
 
+                    // Handle API response
                     if (!response.ok) {
                         const errorDetails = response.statusText || `Lỗi không xác định (Mã: ${response.status})`;
                         if (response.status === 403) {
@@ -679,7 +714,6 @@
                         result.candidates[0].content.parts.length > 0) {
                         setGeneratedParagraph(result.candidates[0].content.parts[0].text);
                     } else {
-                        // Log the full result for debugging if the expected structure is missing
                         console.error("API response missing expected content structure:", result);
                         setGeneratedParagraph("Không thể tạo đoạn văn: Phản hồi API không có nội dung mong muốn.");
                     }
@@ -688,10 +722,11 @@
                     showMessage(`Đã xảy ra lỗi khi tạo đoạn văn: ${error.message}. Vui lòng thử lại.`);
                     setGeneratedParagraph(`Đã xảy ra lỗi khi tạo đoạn văn: ${error.message}.`);
                 } finally {
-                    setIsLoadingParagraph(false);
+                    setIsLoadingParagraph(false); // Hide loading indicator
                 }
             };
 
+            // Function to save generated paragraph to Firebase history
             const saveParagraphToHistory = async () => {
                 if (!isAuthenticated || !userId || !db) {
                     showMessage("Vui lòng đăng nhập để lưu lịch sử.");
@@ -702,12 +737,13 @@
                     return;
                 }
                 try {
+                    // Use __app_id for the collection path as required
                     const historyCollectionRef = window.firebase.collection(db, `artifacts/${__app_id}/users/${userId}/ede_history`);
                     await window.firebase.addDoc(historyCollectionRef, {
                         type: 'paragraph_generation',
                         prompt: paragraphPrompt,
                         edeText: generatedParagraph,
-                        timestamp: window.firebase.serverTimestamp()
+                        timestamp: window.firebase.serverTimestamp() // Use server timestamp for consistent ordering
                     });
                     showMessage("Đoạn văn đã được lưu vào lịch sử!");
                 } catch (error) {
@@ -723,13 +759,13 @@
                     return;
                 }
                 setIsLoadingExplanation(true);
-                setGeneratedExplanation('Đang giải thích...');
+                setGeneratedExplanation('Đang giải thích...'); // Set loading message
                 try {
                     const prompt = `Giải thích khái niệm/từ Êđê sau bằng tiếng Việt: "${explanationWord}". Trả lời ngắn gọn, rõ ràng, không quá 3 câu.`;
                     let chatHistory = [];
                     chatHistory.push({ role: "user", parts: [{ text: prompt }] });
                     const payload = { contents: chatHistory };
-                    const apiKey = ""; 
+                    const apiKey = ""; // API key is automatically provided by the Canvas environment
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
                     const response = await fetch(apiUrl, {
                         method: 'POST',
@@ -737,6 +773,7 @@
                         body: JSON.stringify(payload)
                     });
 
+                    // Handle API response
                     if (!response.ok) {
                         const errorDetails = response.statusText || `Lỗi không xác định (Mã: ${response.status})`;
                         if (response.status === 403) {
@@ -758,10 +795,11 @@
                     showMessage("Đã xảy ra lỗi khi giải thích: " + error.message);
                     setGeneratedExplanation("Đã xảy ra lỗi khi giải thích.");
                 } finally {
-                    setIsLoadingExplanation(false);
+                    setIsLoadingExplanation(false); // Hide loading indicator
                 }
             };
 
+            // Function to save generated explanation to Firebase history
             const saveExplanationToHistory = async () => {
                 if (!isAuthenticated || !userId || !db) {
                     showMessage("Vui lòng đăng nhập để lưu lịch sử.");
@@ -772,12 +810,13 @@
                     return;
                 }
                 try {
+                    // Use __app_id for the collection path as required
                     const historyCollectionRef = window.firebase.collection(db, `artifacts/${__app_id}/users/${userId}/ede_history`);
                     await window.firebase.addDoc(historyCollectionRef, {
                         type: 'explanation',
                         word: explanationWord,
                         explanationText: generatedExplanation,
-                        timestamp: window.firebase.serverTimestamp()
+                        timestamp: window.firebase.serverTimestamp() // Use server timestamp for consistent ordering
                     });
                     showMessage("Giải thích đã được lưu vào lịch sử!");
                 } catch (error) {
@@ -788,6 +827,7 @@
 
             // --- Speech-to-Text Logic ---
             useEffect(() => {
+                // Check if browser supports SpeechRecognition API
                 if (!('webkitSpeechRecognition' in window)) {
                     showMessage("Trình duyệt của bạn không hỗ trợ nhận dạng giọng nói. Vui lòng sử dụng Chrome hoặc trình duyệt tương thích.");
                     return;
@@ -796,9 +836,10 @@
                 const SpeechRecognition = window.webkitSpeechRecognition;
                 const recognition = new SpeechRecognition();
                 recognition.continuous = false; // Set to true for continuous recognition
-                recognition.interimResults = true; // Get interim results
-                recognition.lang = 'vi-VN'; // Default to Vietnamese, user can change if needed
+                recognition.interimResults = true; // Get interim results for live feedback
+                recognition.lang = 'vi-VN'; // Set language to Vietnamese
 
+                // Event handlers for speech recognition
                 recognition.onstart = () => {
                     setIsRecording(true);
                     setSpeechRecognitionText('Đang nghe...');
@@ -815,7 +856,7 @@
                             interimTranscript += transcript;
                         }
                     }
-                    setSpeechRecognitionText(finalTranscript || interimTranscript);
+                    setSpeechRecognitionText(finalTranscript || interimTranscript); // Display final or interim text
                 };
 
                 recognition.onerror = (event) => {
@@ -832,66 +873,67 @@
                     }
                 };
 
-                recognitionRef.current = recognition;
+                recognitionRef.current = recognition; // Store recognition object in ref
 
-                // Cleanup on component unmount
+                // Cleanup function to stop recognition if component unmounts
                 return () => {
                     if (recognitionRef.current) {
                         recognitionRef.current.stop();
                     }
                 };
-            }, []); // Run once on mount
+            }, []); // Empty dependency array means this effect runs once on mount
 
             const startSpeechRecognition = () => {
                 if (recognitionRef.current) {
-                    setSpeechRecognitionText('');
-                    recognitionRef.current.start();
+                    setSpeechRecognitionText(''); // Clear previous text
+                    recognitionRef.current.start(); // Start recognition
                 }
             };
 
             const stopSpeechRecognition = () => {
                 if (recognitionRef.current) {
-                    recognitionRef.current.stop();
+                    recognitionRef.current.stop(); // Stop recognition
                 }
             };
 
             // --- Text-to-Speech Logic ---
             useEffect(() => {
+                // Check if browser supports SpeechSynthesis API
                 if (!('speechSynthesis' in window)) {
                     showMessage("Trình duyệt của bạn không hỗ trợ chuyển văn bản thành giọng nói.");
                     return;
                 }
 
                 const synth = window.speechSynthesis;
-                synthRef.current = synth;
+                synthRef.current = synth; // Store synth object in ref
 
                 const loadVoices = () => {
                     const availableVoices = synth.getVoices();
-                    setVoices(availableVoices);
+                    setVoices(availableVoices); // Set available voices
                     // Try to select a Vietnamese voice by default
                     const defaultVietnameseVoice = availableVoices.find(voice => voice.lang === 'vi-VN');
                     if (defaultVietnameseVoice) {
                         setSelectedVoice(defaultVietnameseVoice);
                     } else if (availableVoices.length > 0) {
-                        // Fallback to first available voice if no Vietnamese
+                        // Fallback to first available voice if no Vietnamese voice is found
                         setSelectedVoice(availableVoices[0]);
                     }
                 };
 
-                // Load voices when they change (e.g., after page load)
+                // Load voices when they change (e.g., after page load or new voices are installed)
                 synth.onvoiceschanged = loadVoices;
-                // Load voices immediately if they are already available
+                // Load voices immediately if they are already available (for cases where onvoiceschanged might not fire)
                 if (synth.getVoices().length > 0) {
                     loadVoices();
                 }
 
-                // Cleanup on component unmount
+                // Cleanup function to cancel any ongoing speech if component unmounts
                 return () => {
                     if (synthRef.current) {
                         synthRef.current.cancel();
                     }
                 };
-            }, []);
+            }, []); // Empty dependency array means this effect runs once on mount
 
             const speakText = () => {
                 if (!speechSynthesisText.trim()) {
@@ -904,18 +946,17 @@
                 }
                 
                 if (synthRef.current.speaking) {
-                    synthRef.current.cancel(); // Stop current speech if any
+                    synthRef.current.cancel(); // Stop current speech if any is ongoing
                 }
 
                 const utterance = new SpeechSynthesisUtterance(speechSynthesisText);
                 if (selectedVoice) {
-                    utterance.voice = selectedVoice;
+                    utterance.voice = selectedVoice; // Use selected voice
                 } else {
-                    // Fallback to a default language if no specific voice is selected
-                    // This might be overridden by the browser's default voice for the text's language
-                    utterance.lang = 'vi-VN'; 
+                    utterance.lang = 'vi-VN'; // Fallback to Vietnamese language if no specific voice is selected
                 }
 
+                // Event handlers for speech synthesis
                 utterance.onstart = () => setIsSpeaking(true);
                 utterance.onend = () => setIsSpeaking(false);
                 utterance.onerror = (event) => {
@@ -924,33 +965,36 @@
                     showMessage(`Lỗi chuyển văn bản thành giọng nói: ${event.error}`);
                 };
 
-                synthRef.current.speak(utterance);
+                synthRef.current.speak(utterance); // Start speaking
             };
 
             const stopSpeaking = () => {
                 if (synthRef.current && synthRef.current.speaking) {
-                    synthRef.current.cancel();
+                    synthRef.current.cancel(); // Cancel current speech
                     setIsSpeaking(false);
                 }
             };
 
             // --- History Logic ---
             useEffect(() => {
+                // Fetch history only if authenticated, Firebase is initialized, and on the 'history' tab
                 if (db && userId && isAuthenticated && activeTab === 'history') {
                     if (historyUnsubscribeRef.current) {
-                        historyUnsubscribeRef.current(); // Unsubscribe previous listener
+                        historyUnsubscribeRef.current(); // Unsubscribe from previous listener to avoid duplicates
                     }
+                    // Define the Firestore collection path using __app_id
                     const historyCollectionRef = window.firebase.collection(db, `artifacts/${__app_id}/users/${userId}/ede_history`);
-                    // Removed orderBy from query as per instructions to avoid index issues.
-                    const q = window.firebase.query(historyCollectionRef); // No orderBy here
+                    // Create a query without orderBy to avoid index issues, sorting will be done in memory
+                    const q = window.firebase.query(historyCollectionRef);
                     
+                    // Set up a real-time listener for the history collection
                     historyUnsubscribeRef.current = window.firebase.onSnapshot(q, (snapshot) => {
                         const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                        // Sort in memory instead
+                        // Sort items by timestamp in descending order (newest first) in memory
                         const sortedItems = items.sort((a, b) => {
                             const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
                             const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
-                            return dateB - dateA; // Descending order
+                            return dateB - dateA;
                         });
                         setHistoryItems(sortedItems);
                     }, (error) => {
@@ -958,23 +1002,28 @@
                         showMessage("Lỗi khi tải lịch sử: " + error.message);
                     });
                 } else if (historyUnsubscribeRef.current) {
-                    historyUnsubscribeRef.current(); // Unsubscribe when not authenticated or not on history tab
+                    // Unsubscribe and clear history if not authenticated or not on history tab
+                    historyUnsubscribeRef.current();
                     historyUnsubscribeRef.current = null;
                     setHistoryItems([]);
                 }
+                // Cleanup function for the effect
                 return () => {
                     if (historyUnsubscribeRef.current) {
                         historyUnsubscribeRef.current();
                     }
                 };
-            }, [db, userId, isAuthenticated, activeTab]);
+            }, [db, userId, isAuthenticated, activeTab]); // Dependencies for this effect
 
+            // Helper function to format Firebase Timestamps
             const formatTimestamp = (timestamp) => {
                 if (!timestamp) return 'N/A';
+                // Convert Firebase Timestamp object to Date object if needed, then format
                 const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-                return date.toLocaleString('vi-VN');
+                return date.toLocaleString('vi-VN'); // Format date to Vietnamese locale string
             };
 
+            // Show loading spinner while Firebase is initializing
             if (authLoading) {
                 return (
                     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-800">
@@ -1018,7 +1067,7 @@
                             <TabButton tabName="history" activeTab={activeTab} setActiveTab={setActiveTab} disabled={!isAuthenticated}>Lịch Sử</TabButton>
                         </div>
 
-                        {/* Tab Content */}
+                        {/* Tab Content - Conditional Rendering based on activeTab */}
                         {activeTab === 'translate' && (
                             <div className="bg-white dark:bg-gray-700 p-6 md:p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl">
                                 <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Dịch văn bản</h2>
@@ -1340,11 +1389,13 @@
                             </div>
                         )}
                     </div>
+                    {/* Message Modal */}
                     <MessageModal message={message} onClose={closeMessage} />
                 </div>
             );
         }
 
+        // TabButton Component for navigation tabs
         const TabButton = ({ tabName, activeTab, setActiveTab, children, disabled = false }) => (
             <button
                 onClick={() => setActiveTab(tabName)}
@@ -1361,6 +1412,7 @@
             </button>
         );
 
+        // Render the App component to the 'root' div in the HTML
         ReactDOM.render(<App />, document.getElementById('root'));
     </script>
 </body>

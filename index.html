@@ -117,7 +117,7 @@
             // State for dark mode toggle
             const [darkMode, setDarkMode] = useState(false);
             // State to manage active tab in the UI
-            const [activeTab, setActiveTab] = useState('translate'); // Default tab is 'translate'
+            const [activeTab, setActiveTab] = useState('image'); // Default tab is 'image' after removing 'translate'
             // State for displaying modal messages
             const [message, setMessage] = useState('');
 
@@ -160,198 +160,6 @@
             // History States
             const [historyItems, setHistoryItems] = useState([]); // List of historical interactions
             const historyUnsubscribeRef = useRef(null); // Ref to unsubscribe from Firestore listener
-
-            // Dictionary Data (internal, hardcoded for demonstration)
-            // This data is used for direct dictionary lookups before resorting to AI translation.
-            // Examples are included where available.
-            const dictionaryData = useMemo(() => {
-                // Raw data from PDF snippets and existing entries
-                const rawData = [
-                    { ede: "Abao", type: "dt", vietnamese: "Ốc bươu" },
-                    { ede: "Abăn", type: "dt", vietnamese: "Cái chăn (mền). Msăm abăn: Đắp chăn; Abăn hmlei: Chăn bông" },
-                    { ede: "Abŭ", type: "dt", vietnamese: "Cái hũ" },
-                    { ede: "Adei", type: "dt", vietnamese: "Em" },
-                    { ede: "Adě", type: "dt", vietnamese: "Hến" },
-                    { ede: "Adham", type: "dt", vietnamese: "Một nhóm trong tộc người Êđê" },
-                    { ede: "Adhan", type: "dt", vietnamese: "Cành. Adhan kyão: Cành cây" },
-                    { ede: "Adhei", type: "dt", vietnamese: "Trán. Adhei bai: Trán rộng" },
-                    { ede: "Adiê", type: "dt", vietnamese: "Trời. Adiê hjan: Trời mưa" },
-                    { ede: "Adiê không", type: "", vietnamese: "Nắng hạn" },
-                    { ede: "Adiê tlam", type: "", vietnamese: "Xế chiều" },
-                    { ede: "Adih", type: "đt", vietnamese: "Kia. Sang kâo ti anôk adih: Nhà tôi chỗ kia; Hruê aguah adih kâo đuễ hiu: Sáng ngày kia tôi đi chơi" },
-                    { ede: "Adôk", type: "đgt", vietnamese: "Còn. Kâo adôk prăk: Tôi còn tiền; Adôk hdĩp: Còn sống" },
-                    { ede: "Adrăng", type: "dt", vietnamese: "Rơm rạ. Mkăm adrăng: Đống rơm" },
-                    { ede: "Adring", type: "dt", vietnamese: "Hiên nhà sàn. Amĩ kâo bhu mdiê ti adring: Mẹ tôi phơi lúa ở hiên nhà sàn" },
-                    { ede: "Adrŏk", type: "dt", vietnamese: "Con cóc" },
-                    { ede: "Aduôn", type: "dt", vietnamese: "Bà (nội, ngoại)" },
-                    { ede: "Adŭ", type: "dt", vietnamese: "1.Phòng. Adŭ pit: Phòng ngủ; Adŭ hriăm: Phòng học. 2. Lớp. Adŭ năm: Lớp 6; Adŭ pluh dua: Lớp 12. 3. Cái ô. Adŭ jũ: Ô màu đen" },
-                    { ede: "Adŭ bruă", type: "dt", vietnamese: "Văn phòng" },
-                    { ede: "Adŭ git gai bruă kiă kriê", type: "dt", vietnamese: "Phòng hành chính" },
-                    { ede: "Adŭ tĩng yap", type: "dt", vietnamese: "Phòng kế toán" },
-                    { ede: "Adŭng", type: "dt", vietnamese: "Mũi. Băng adũng: Lỗ mũi" },
-                    { ede: "Aê", type: "dt", vietnamese: "Ông (nội, ngoại)" },
-                    { ede: "Aê êa drao", type: "dt", vietnamese: "Bác sĩ" },
-                    { ede: "Aguah", type: "trạng từ", vietnamese: "Buổi sáng. Aguah ưm: Sáng sớm; Aguah mgi: Sáng mai; Aguah mbruê: Sáng hôm qua" },
-                    { ede: "Ai", type: "dt", vietnamese: "Sức. Ai ktang: Sức mạnh" },
-                    { ede: "Ajĭk", type: "dt", vietnamese: "Ếch" },
-                    { ede: "Ak", type: "dt", vietnamese: "Con quạ. Jũ msě si ak: Đen như quạ" },
-                    { ede: "Akăt", type: "dt", vietnamese: "Bụi (khóm). Akăt kram: Bụi tre" },
-                    { ede: "Akâo", type: "đgt", vietnamese: "Xin. Akâo prăk: Xin tiền; Akâo êa mnăm: Xin nước uống" },
-                    { ede: "Ala", type: "dt", vietnamese: "Con rắn. Ala knăl: Rắn giun; Ala mtah: Rắn lục" },
-                    { ede: "Alah", type: "tt", vietnamese: "Lười biếng. Alah mă bruă: Lười làm việc" },
-                    { ede: "Ală", type: "dt", vietnamese: "Mắt. Pĩt ală: Nhắm mắt" },
-                    { ede: "Ama", type: "dt", vietnamese: "Bố (cha)" },
-                    { ede: "Amai", type: "dt", vietnamese: "Chị" },
-                    { ede: "Amâo", type: "pht", vietnamese: "Không. Amâo mâo: Không có" },
-                    { ede: "Amĭ", type: "dt", vietnamese: "Mẹ (má)" },
-                    { ede: "Ana", type: "dt", vietnamese: "Cây; giống cái (Chỉ động vật). Hlăm hma, awa pla lu ana boh kroh. - Trong rẫy, bác trồng nhiều loại cây ăn trái. Ɇmô ana sang aê mrâo mdai. - Bò cái nhà ông mới đẻ." },
-                    { ede: "Anak", type: "dt", vietnamese: "Con (người)" },
-                    { ede: "Anăn", type: "dt", vietnamese: "Tên; (đt): Đó, đấy" },
-                    { ede: "Anei", type: "đt", vietnamese: "Đây. Kâo mă bruă ti anei: Tôi làm việc ở đây" },
-                    { ede: "Anôk", type: "dt", vietnamese: "Nơi, chỗ, vị trí. Djõ anôk: Đúng vị trí" },
-                    { ede: "Ao", type: "dt", vietnamese: "Áo. Ao kỗ: Áo trắng. Ao hjan: Áo mưa" },
-                    { ede: "Arăng", type: "đt", vietnamese: "Người ta. Kâo dlăng arăng bị lông đi čữ. Tôi xem người ta thi leo núi." },
-                    { ede: "Asăr", type: "dt", vietnamese: "Hạt, hột. Asăr mdiê: Hạt lúa. Boh čên anei lu asăr. - Quả chanh này nhiều hột. Mdiê bi asăr êdi. - Lúa rất chắc hạt." },
-                    { ede: "Asâo", type: "dt", vietnamese: "Con chó" },
-                    { ede: "Awa", type: "dt", vietnamese: "Bác (anh, chị của bố)" },
-                    { ede: "Ayong", type: "dt", vietnamese: "Anh" },
-                    
-                    // Bổ sung từ mới từ Ê.ĐÊ - MÔN VIẾT.pdf
-                    { ede: "Băng", type: "đgt", vietnamese: "Ăn (thức ăn nói chung), cháy, bén" },
-                    { ede: "Blei", type: "đgt", vietnamese: "Mua. Amai blei dua aruăt klei mah. Chị mua hai sợi dây chuyền vàng." },
-                    { ede: "Blŭ", type: "đgt", vietnamese: "Nói" },
-                    { ede: "Boh", type: "dt", vietnamese: "Quả, trái, trứng; (đgt) giặt; (tl) cái, chiếc. Boh suai: quả xoài; boh kruễ: trái cam; Boh mnũ: trứng gà. Boh chum ao: giặt quần áo. Dua boh kčok: hai cái ly;" },
-                    { ede: "Bruă", type: "dt", vietnamese: "Việc, công việc. Mă bruă: làm việc. Tơ nao mă bruă, kâo khăng đi êdeh pơ phút. - Khi đi làm, tôi thường đi xe máy." },
-                    { ede: "Buôn", type: "dt", vietnamese: "Làng, buôn. Hlăm buôn anei, mão lu boh gõ esei kjăp băng huă. Trong buôn này, có nhiều con trâu ăn khỏe." },
-                    { ede: "Čih", type: "đgt", vietnamese: "Viết" },
-                    { ede: "Dlăng", type: "đgt", vietnamese: "Đọc, xem, nhìn" },
-                    { ede: "Djam", type: "dt", vietnamese: "Rau, canh" },
-                    { ede: "Djă", type: "đgt", vietnamese: "Cầm, giữ" },
-                    { ede: "Drei", type: "đt", vietnamese: "Chúng ta, ta; (tl) con (dùng đếm con vật)" },
-                    { ede: "Êa", type: "dt", vietnamese: "Nước" },
-                    { ede: "Êdeh", type: "dt", vietnamese: "Xe. Tơ nao mă bruă, kâo khăng đi êdeh pơ phút. Khi đi làm, tôi thường đi xe máy." },
-                    { ede: "Êmô", type: "dt", vietnamese: "Con bò" },
-                    { ede: "Êsei", type: "dt", vietnamese: "Cơm" },
-                    { ede: "Hriăm", type: "đgt", vietnamese: "Học" },
-                    { ede: "Hruê", type: "dt", vietnamese: "Ngày. Hruê mdei, kâo hiu chưn hồng bằng gặp. Ngày nghỉ, tôi đi chơi với bạn." },
-                    { ede: "Huă", type: "đgt", vietnamese: "Ăn (cơm)" },
-                    { ede: "Ih", type: "đt", vietnamese: "Anh, chị, bạn (ngôi thứ 2 số ít)" },
-                    { ede: "Jăk", type: "tt", vietnamese: "Tốt, ngon" },
-                    { ede: "Kâo", type: "đt", vietnamese: "Tôi (ngôi thứ nhất số ít). Kâo dlăng arăng bị lông đi čữ. Tôi xem người ta thi leo núi." },
-                    { ede: "Kan", type: "dt", vietnamese: "Cá" },
-                    { ede: "Khăp", type: "đgt", vietnamese: "Thích, yêu" },
-                    { ede: "Klei", type: "dt", vietnamese: "Tiếng, lời, sự việc, dây. Amai blei dua aruăt klei mah. Chị mua hai sợi dây chuyền vàng." },
-                    { ede: "Kphê", type: "dt", vietnamese: "Cà phê. Čar Dak Lak pla lu kphê. Tỉnh Đắk Lắk trồng nhiều cà phê." },
-                    { ede: "Kyâo", type: "dt", vietnamese: "Gỗ, cây. Sang kâo ngã hõng kyâo. Nhà tôi làm bằng gỗ." },
-                    { ede: "Mă", type: "đgt", vietnamese: "Làm, lấy, bắt" },
-                    { ede: "Mâo", type: "đgt", vietnamese: "Có, được" },
-                    { ede: "Mdiê", type: "dt", vietnamese: "Lúa" },
-                    { ede: "Mlan", type: "dt", vietnamese: "Tháng, trăng" },
-                    { ede: "Mnăm", type: "đgt", vietnamese: "Uống" },
-                    { ede: "Mniê", type: "dt", vietnamese: "Phụ nữ, con gái" },
-                    { ede: "Mnuih", type: "dt", vietnamese: "Người" },
-                    { ede: "Mnŭ", type: "dt", vietnamese: "Con gà" },
-                    { ede: "Nao", type: "đgt", vietnamese: "Đi" },
-                    { ede: "Ñu", type: "đt", vietnamese: "Nó, ông ấy, bà ấy (ngôi thứ 3 số ít)" },
-                    { ede: "Pla", type: "đgt", vietnamese: "Trồng, cấy. Hlăm hma, awa pla lu ana boh kroh. Trong rẫy, bác trồng nhiều loại cây ăn trái." },
-                    { ede: "Prăk", type: "dt", vietnamese: "Tiền, bạc" },
-                    { ede: "Ruă", type: "đgt", vietnamese: "Đau, ốm. Amũ kâo ruă aruăt ariêng. Mẹ tôi đau gân cốt." },
-                    { ede: "Sang", type: "dt", vietnamese: "Nhà. Sang kâo ngã hõng kyâo. Nhà tôi làm bằng gỗ." },
-                    { ede: "Siam", type: "tt", vietnamese: "Đẹp" },
-                    { ede: "Thâo", type: "đgt", vietnamese: "Biết" },
-                    { ede: "Thuôn", type: "dt", vietnamese: "Năm, tuổi" },
-                    { ede: "ŭn", type: "dt", vietnamese: "Lợn, heo" },
-                    { ede: "Aruăt", type: "dt", vietnamese: "Gân, sợi. Amũ kâo ruă aruăt ariêng. Mẹ tôi đau gân cốt. Amai blei dua aruăt klei mah. Chị mua hai sợi dây chuyền vàng." },
-                    { ede: "Čar", type: "dt", vietnamese: "Tỉnh, chẻ. Čar Dak Lak pla lu kphê. Tỉnh Đắk Lắk trồng nhiều cà phê. Aê dôk čar mnũng. Ông đang chẻ lạt." },
-                    { ede: "Đĭ", type: "đgt", vietnamese: "Leo, trèo, cưỡi, đi. Kâo dlăng arăng bị lông đi čữ. Tôi xem người ta thi leo núi. Tơ nao mă bruă, kâo khăng đi êdeh pơ phút. Khi đi làm, tôi thường đi xe máy. Hruê mdei, kâo hiu chưn hồng bằng gặp. Ngày nghỉ, tôi đi chơi với bạn." },
-                    // New entries from Từ điển E-V chuẩn.pdf with corrected Vietnamese
-                    // New entries from tài liêu tiếng c.pdf (if any, based on dictionary-like patterns)
-                    // The file "tài liêu tiếng c.pdf" primarily contains prose and grammatical explanations,
-                    // not structured dictionary entries. Therefore, no new word entries were directly extracted
-                    // from this file in a dictionary format.
-                ];
-
-                // Process raw data to extract meaning and examples based on the rules
-                return rawData.map(entry => {
-                    let meaning = entry.vietnamese;
-                    const examples = [];
-
-                    // Check for patterns that indicate the entire string is the meaning (multi-meaning, type annotations)
-                    const isMultiNumberedMeaning = meaning.match(/^\d+\./);
-                    const containsExplicitTypeExample = meaning.includes('(tt):') || meaning.includes('(đt):') || meaning.includes('(tl)');
-                    const containsSemicolonMeaningSeparator = meaning.includes(';'); // Semicolon often separates distinct meanings
-
-                    // If it's a multi-numbered meaning or contains explicit type examples, or distinct meanings separated by semicolon,
-                    // treat the entire string as the meaning. Examples will be extracted from the remaining part after the meaning.
-                    if (isMultiNumberedMeaning || containsExplicitTypeExample || containsSemicolonMeaningSeparator) {
-                        // For these complex cases, we need to carefully separate the meaning from actual examples.
-                        // For simplicity and to avoid over-complicating the parsing,
-                        // if the meaning itself contains numbered points or type annotations,
-                        // we assume the entire string up to the *first* example-like pattern to be the meaning.
-                        // Any text after a clear "Êđê phrase: Vietnamese phrase" pattern is an example.
-
-                        // Attempt to find the first occurrence of "Êđê phrase: Vietnamese phrase" pattern
-                        const exampleRegex = /([A-Za-zÀ-Ỹà-ỹ\s\\_]+): ([A-Za-zÀ-Ỹà-ỹ\s\\_.,]+)/g;
-                        let match;
-                        let lastMeaningEnd = 0;
-
-                        // Collect all examples first
-                        let tempExamples = [];
-                        let currentMeaningPart = meaning;
-
-                        // Iterate through matches to extract examples
-                        while ((match = exampleRegex.exec(currentMeaningPart)) !== null) {
-                            // Add the matched example to tempExamples
-                            tempExamples.push(match[0].trim());
-                            // Update the last meaning end to exclude this example
-                            lastMeaningEnd = match.index + match[0].length;
-                        }
-
-                        // If examples were found, the meaning is the part before the first example
-                        if (tempExamples.length > 0) {
-                            const firstExampleIndex = meaning.indexOf(tempExamples[0]);
-                            if (firstExampleIndex !== -1) {
-                                meaning = meaning.substring(0, firstExampleIndex).trim();
-                            }
-                            examples.push(...tempExamples);
-                        } else {
-                            // If no clear "Ede: Viet" examples found, but still complex, keep original meaning, no inline examples.
-                            // The examples array will remain empty for this entry unless explicitly provided in rawData.
-                        }
-                        
-                        // Handle cases where examples are provided in the original `examples` array (not from `vietnamese` string)
-                        if (entry.examples && entry.examples.length > 0) {
-                            examples.push(...entry.examples);
-                        }
-
-                    } else {
-                        // Simple case: "Meaning. Example."
-                        const parts = meaning.split('. ');
-                        meaning = parts[0].trim();
-                        if (parts.length > 1) {
-                            // If there are more parts after the first dot, they are examples
-                            const potentialExamples = parts.slice(1).join('. ').trim();
-                            if (potentialExamples) {
-                                // Split by semicolon for multiple examples on one line
-                                potentialExamples.split(';').forEach(ex => {
-                                    const trimmedEx = ex.trim();
-                                    if (trimmedEx) {
-                                        examples.push(trimmedEx);
-                                    }
-                                });
-                            }
-                        }
-                    }
-
-                    return {
-                        ede: entry.ede,
-                        type: entry.type,
-                        vietnamese: meaning,
-                        examples: examples
-                    };
-                });
-            }, []);
-
 
             // Function to display a modal message
             const showMessage = (msg) => {
@@ -443,13 +251,14 @@
             // --- Reset states when changing tabs ---
             // This ensures a clean slate when switching between different functionalities.
             useEffect(() => {
-                setEdeWord('');
-                setVietnameseMeaning('');
-                setIsLoadingTextTranslate(false);
-                setShowGenerateExampleButton(false);
-                setExampleSentence('');
-                setIsLoadingExample(false);
-                setTranslationDirection('edeToViet'); // Reset translation direction to default
+                // Removed states related to text translation
+                // setEdeWord('');
+                // setVietnameseMeaning('');
+                // setIsLoadingTextTranslate(false);
+                // setShowGenerateExampleButton(false);
+                // setExampleSentence('');
+                // setIsLoadingExample(false);
+                // setTranslationDirection('edeToViet'); // Reset translation direction to default
 
                 setImageSrc(null);
                 setImageFile(null); // Clear image file
@@ -480,192 +289,6 @@
 
                 setMessage(''); // Clear any modal messages
             }, [activeTab]); // Effect runs whenever activeTab changes
-
-
-            // --- Text Translation Logic ---
-            const handleInputChange = (event) => {
-                const input = event.target.value;
-                setEdeWord(input); // Update input word state
-                setExampleSentence(''); // Clear example when input changes
-                setShowGenerateExampleButton(false); // Hide example button
-                if (input.trim() === '') {
-                    setVietnameseMeaning(''); // Clear meaning if input is empty
-                } else {
-                    translateWord(input, translationDirection); // Trigger translation
-                }
-            };
-
-            const translateWord = async (word, direction) => {
-                const lowerCaseWord = word.trim().toLowerCase();
-                let dictionaryResult = null;
-                let aiTranslatedText = '';
-                let finalMeaning = '';
-                let aiPrompt = '';
-
-                setIsLoadingTextTranslate(true);
-                setVietnameseMeaning('Đang tìm kiếm bản dịch...');
-                setExampleSentence('');
-                setShowGenerateExampleButton(false);
-
-                try {
-                    // Step 1: Search in internal dictionary
-                    if (direction === 'edeToViet') {
-                        const foundEntry = dictionaryData.find(entry => entry.ede.toLowerCase() === lowerCaseWord);
-                        if (foundEntry) {
-                            dictionaryResult = `(${foundEntry.type}) ${foundEntry.vietnamese} (Từ điển nội bộ)`;
-                            if (foundEntry.examples && foundEntry.examples.length > 0) {
-                                setExampleSentence(foundEntry.examples.join('\n'));
-                            }
-                        }
-                        aiPrompt = `Dịch từ Êđê sau sang tiếng Việt: "${word}". Chỉ trả về bản dịch thuần túy, không có giải thích hay định dạng gì thêm. Nếu không biết, hãy trả lời "Không tìm thấy".`;
-                    } else { // direction === 'vietToEde'
-                        const foundEntry = dictionaryData.find(entry => entry.vietnamese.toLowerCase().includes(lowerCaseWord));
-                        if (foundEntry) {
-                            dictionaryResult = `${foundEntry.ede} (Từ điển nội bộ)`;
-                            if (foundEntry.examples && foundEntry.examples.length > 0) {
-                                setExampleSentence(foundEntry.examples.join('\n'));
-                            }
-                        }
-                        aiPrompt = `Dịch từ tiếng Việt sau sang tiếng Êđê: "${word}". Chỉ trả về bản dịch thuần túy, không có giải thích hay định dạng gì thêm. Nếu không biết, hãy trả lời "Không tìm thấy".`;
-                    }
-
-                    // Step 2: Call AI API for translation (always call)
-                    let chatHistory = [];
-                    chatHistory.push({ role: "user", parts: [{ text: aiPrompt }] });
-                    const payload = { contents: chatHistory };
-                    const apiKey = "AIzaSyBT0JPiX8SFOjV38NvuSnyLseaGUdlcvHM"; // API key is automatically provided by the Canvas environment
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-                    
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    // Handle AI API response
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        console.error(`API Error: Status ${response.status}, Status Text: ${response.statusText}, Body: ${errorText}`);
-                        let errorMessage = `Lỗi API: ${response.status} - ${response.statusText}`;
-                        try {
-                            const errorJson = JSON.parse(errorText);
-                            if (errorJson.error && errorJson.error.message) {
-                                errorMessage = `Lỗi API: ${errorJson.error.message}`;
-                            }
-                        } catch (e) {
-                            // Not a JSON error, use the raw text
-                        }
-                        throw new Error(errorMessage);
-                    }
-
-                    const result = await response.json();
-                    if (result.candidates && result.candidates.length > 0 &&
-                        result.candidates[0].content && result.candidates[0].content.parts &&
-                        result.candidates[0].content.parts.length > 0) {
-                        const text = result.candidates[0].content.parts[0].text;
-                        if (!text.toLowerCase().includes("không tìm thấy")) {
-                            aiTranslatedText = `${text} (Dịch bởi AI)`;
-                        }
-                    }
-
-                    // Step 3: Combine and display results
-                    if (dictionaryResult && aiTranslatedText) {
-                        finalMeaning = `${dictionaryResult}\n\n${aiTranslatedText}`;
-                    } else if (dictionaryResult) {
-                        finalMeaning = dictionaryResult;
-                    } else if (aiTranslatedText) {
-                        finalMeaning = aiTranslatedText;
-                    } else {
-                        finalMeaning = "Không tìm thấy từ này trong từ điển hoặc qua AI.";
-                    }
-                    setVietnameseMeaning(finalMeaning);
-
-                    // Determine whether to show generate example button
-                    // Show if Ede to Viet and either no dictionary example or no dictionary entry at all
-                    if (direction === 'edeToViet' && (!foundEntry || (foundEntry && foundEntry.examples && foundEntry.examples.length === 0))) {
-                        setShowGenerateExampleButton(true);
-                    } else {
-                        setShowGenerateExampleButton(false);
-                    }
-
-                } catch (error) {
-                    console.error("Lỗi khi dịch:", error);
-                    showMessage("Đã xảy ra lỗi khi dịch từ: " + error.message);
-                    setVietnameseMeaning("Đã xảy ra lỗi khi dịch từ.");
-                    setShowGenerateExampleButton(false);
-                } finally {
-                    setIsLoadingTextTranslate(false); // Hide loading indicator
-                }
-            };
-
-            // Function to generate an example sentence using AI
-            const generateExampleSentence = async () => {
-                if (!edeWord.trim()) {
-                    showMessage("Vui lòng nhập từ tiếng Êđê để tạo ví dụ.");
-                    return;
-                }
-                // This function is specifically for Ede examples, so it always uses edeWord as Ede input
-                setIsLoadingExample(true);
-                setExampleSentence('Đang tạo ví dụ...');
-                try {
-                    const prompt = `Tạo một câu ví dụ bằng tiếng Êđê sử dụng từ: "${edeWord}". Sau đó dịch câu đó sang tiếng Việt. Định dạng: "Câu Êđê - Câu Việt".`;
-                    let chatHistory = [];
-                    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-                    const payload = { contents: chatHistory };
-                    const apiKey = "AIzaSyBT0JPiX8SFOjV38NvuSnyLseaGUdlcvHM"; // API key is automatically provided by the Canvas environment
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    // Handle API response
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        console.error(`API Error: Status ${response.status}, Status Text: ${response.statusText}, Body: ${errorText}`);
-                        let errorMessage = `Lỗi API: ${response.status} - ${response.statusText}`;
-                        try {
-                            const errorJson = JSON.parse(errorText);
-                            if (errorJson.error && errorJson.error.message) {
-                                errorMessage = `Lỗi API: ${errorJson.error.message}`;
-                            }
-                        } catch (e) {
-                            // Not a JSON error, use the raw text
-                        }
-                        throw new Error(errorMessage);
-                    }
-
-                    const result = await response.json();
-                    if (result.candidates && result.candidates.length > 0 &&
-                        result.candidates[0].content && result.candidates[0].content.parts &&
-                        result.candidates[0].content.parts.length > 0) {
-                        const text = result.candidates[0].content.parts[0].text;
-                        setExampleSentence(text);
-                    } else {
-                        setExampleSentence("Không thể tạo ví dụ.");
-                    }
-                } catch (error) {
-                    console.error("Lỗi khi tạo ví dụ:", error);
-                    showMessage("Đã xảy ra lỗi khi tạo ví dụ: " + error.message);
-                    setExampleSentence("Đã xảy ra lỗi khi tạo ví dụ.");
-                } finally {
-                    setIsLoadingExample(false); // Hide loading indicator
-                }
-            };
-
-            // Function to toggle translation direction
-            const toggleTranslationDirection = () => {
-                setTranslationDirection(prevDirection => {
-                    const newDirection = prevDirection === 'edeToViet' ? 'vietToEde' : 'edeToViet';
-                    // Clear current translation results when direction changes
-                    setEdeWord('');
-                    setVietnameseMeaning('');
-                    setExampleSentence('');
-                    setShowGenerateExampleButton(false);
-                    return newDirection;
-                });
-            };
 
             // --- Image Translation Logic ---
             const handleImageUpload = (event) => {
@@ -1178,7 +801,7 @@
 
                         {/* Navigation Tabs */}
                         <div className="flex justify-center border-b border-gray-200 dark:border-gray-700 mb-8 overflow-x-auto">
-                            <TabButton tabName="translate" activeTab={activeTab} setActiveTab={setActiveTab}>Dịch Văn Bản</TabButton>
+                            {/* Removed TabButton for "Dịch Văn Bản" */}
                             <TabButton tabName="image" activeTab={activeTab} setActiveTab={setActiveTab}>Dịch Từ Ảnh</TabButton>
                             <TabButton tabName="generate" activeTab={activeTab} setActiveTab={setActiveTab}>Tạo Đoạn Văn</TabButton>
                             <TabButton tabName="explain" activeTab={activeTab} setActiveTab={setActiveTab}>Giải Thích</TabButton>
@@ -1188,72 +811,7 @@
                         </div>
 
                         {/* Tab Content - Conditional Rendering based on activeTab */}
-                        {activeTab === 'translate' && (
-                            <div className="bg-white dark:bg-gray-700 p-6 md:p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl">
-                                <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Dịch văn bản</h2>
-                                <p className="text-gray-600 dark:text-gray-400 mb-4">
-                                    Nhập một từ hoặc cụm từ để nhận bản dịch và ví dụ (nếu có).
-                                </p>
-                                <div className="space-y-4">
-                                    <div className="flex justify-center mb-4">
-                                        <button
-                                            onClick={toggleTranslationDirection}
-                                            className="px-6 py-2 bg-indigo-500 text-white rounded-full hover:bg-indigo-600 transition-colors flex items-center space-x-2"
-                                        >
-                                            <span>
-                                                {translationDirection === 'edeToViet' ? 'Êđê → Việt' : 'Việt → Êđê'}
-                                            </span>
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                    <div>
-                                        <label htmlFor="edeInput" className="block text-gray-700 dark:text-gray-300 text-sm font-semibold mb-2">
-                                            {translationDirection === 'edeToViet' ? 'Nhập từ tiếng Êđê:' : 'Nhập từ tiếng Việt:'}
-                                        </label>
-                                        <input
-                                            type="text"
-                                            id="edeInput"
-                                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200 ease-in-out text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-lg bg-gray-50 dark:bg-gray-800"
-                                            placeholder={translationDirection === 'edeToViet' ? 'Ví dụ: Kâo, Sang, Mă bruă...' : 'Ví dụ: Tôi, Nhà, Làm việc...'}
-                                            value={edeWord}
-                                            onChange={handleInputChange}
-                                        />
-                                    </div>
-                                    <div className="bg-indigo-50 dark:bg-indigo-900 p-4 rounded-lg border border-indigo-200 dark:border-indigo-700 min-h-[90px] flex flex-col justify-center">
-                                        <h3 className="text-md font-semibold text-indigo-800 dark:text-indigo-200 mb-1">
-                                            {translationDirection === 'edeToViet' ? 'Nghĩa tiếng Việt:' : 'Nghĩa tiếng Êđê:'}
-                                        </h3>
-                                        {isLoadingTextTranslate ? (
-                                            <div className="loader mx-auto my-4"></div>
-                                        ) : (
-                                            <p className="text-gray-800 dark:text-gray-100 text-base whitespace-pre-wrap">
-                                                {vietnameseMeaning || "Kết quả sẽ hiển thị ở đây."}
-                                            </p>
-                                        )}
-                                    </div>
-                                    <div className="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg border border-blue-200 dark:border-blue-700 min-h-[90px] flex flex-col justify-center">
-                                        <h3 className="text-md font-semibold text-blue-700 dark:text-blue-200 mb-1">Ví dụ:</h3>
-                                        {isLoadingExample ? (
-                                            <div className="loader mx-auto my-4"></div>
-                                        ) : (
-                                            <p className="text-gray-800 dark:text-gray-100 text-base whitespace-pre-wrap">
-                                                {exampleSentence || "Ví dụ về cách sử dụng từ sẽ hiển thị ở đây."}
-                                            </p>
-                                        )}
-                                        {showGenerateExampleButton && !isLoadingExample && translationDirection === 'edeToViet' && (
-                                            <button
-                                                onClick={generateExampleSentence}
-                                                className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors self-start"
-                                            >
-                                                Tạo ví dụ bằng AI
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                        {/* Removed content for 'translate' tab */}
 
                         {activeTab === 'image' && (
                             <div className="bg-white dark:bg-gray-700 p-6 md:p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl">

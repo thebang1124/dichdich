@@ -173,8 +173,10 @@
             // Dictionary Data (internal, hardcoded for demonstration)
             // This data is used for direct dictionary lookups before resorting to AI translation.
             // Examples are included where available.
-            const dictionaryData = useMemo(() => [
-                { ede: "Abao", type: "dt", vietnamese: "Ốc bươu", examples: [] },
+            const dictionaryData = useMemo(() => {
+                // Raw data from PDF snippets and existing entries
+                const rawData = [
+                    { ede: "Abao", type: "dt", vietnamese: "Ốc bươu", examples: [] },
                 { ede: "Abăn", type: "dt", vietnamese: "Cái chăn (mền)", examples: ["Msăm abăn: Đắp chăn", "Abăn hmlei: Chăn bông"] },
                 { ede: "Abŭ", type: "dt", vietnamese: "Cái hũ", examples: [] },
                 { ede: "Adei", type: "dt", vietnamese: "Em", examples: [] },
@@ -272,6 +274,93 @@
                 { ede: "Čar", type: "dt", vietnamese: "Tỉnh, chẻ", examples: ["Čar Dak Lak pla lu kphê. - Tỉnh Đắk Lắk trồng nhiều cà phê.", "Aê dôk čar mnũng. - Ông đang chẻ lạt."] },
                 { ede: "Đĭ", type: "đgt", vietnamese: "Leo, trèo, cưỡi, đi", examples: ["Kâo dlăng arăng bị lông đi čữ. - Tôi xem người ta thi leo núi.", "Tơ nao mă bruă, kâo khăng đi êdeh pơ phút. - Khi đi làm, tôi thường đi xe máy.", "Hruê mdei, kâo hiu chưn hồng bằng gặp. - Ngày nghỉ, tôi đi chơi với bạn."] }
             ], []);
+                    // New entries from tài liêu tiếng c.pdf (if any, based on dictionary-like patterns)
+                    // The file "tài liêu tiếng c.pdf" primarily contains prose and grammatical explanations,
+                    // not structured dictionary entries. Therefore, no new word entries were directly extracted
+                    // from this file in a dictionary format.
+                ];
+
+                // Process raw data to extract meaning and examples based on the rules
+                return rawData.map(entry => {
+                    let meaning = entry.vietnamese;
+                    const examples = [];
+
+                    // Check for patterns that indicate the entire string is the meaning (multi-meaning, type annotations)
+                    const isMultiNumberedMeaning = meaning.match(/^\d+\./);
+                    const containsExplicitTypeExample = meaning.includes('(tt):') || meaning.includes('(đt):') || meaning.includes('(tl)');
+                    const containsSemicolonMeaningSeparator = meaning.includes(';'); // Semicolon often separates distinct meanings
+
+                    // If it's a multi-numbered meaning or contains explicit type examples, or distinct meanings separated by semicolon,
+                    // treat the entire string as the meaning. Examples will be extracted from the remaining part after the meaning.
+                    if (isMultiNumberedMeaning || containsExplicitTypeExample || containsSemicolonMeaningSeparator) {
+                        // For these complex cases, we need to carefully separate the meaning from actual examples.
+                        // For simplicity and to avoid over-complicating the parsing,
+                        // if the meaning itself contains numbered points or type annotations,
+                        // we assume the entire string up to the *first* example-like pattern to be the meaning.
+                        // Any text after a clear "Êđê phrase: Vietnamese phrase" pattern is an example.
+
+                        // Attempt to find the first occurrence of "Êđê phrase: Vietnamese phrase" pattern
+                        const exampleRegex = /([A-Za-zÀ-Ỹà-ỹ\s\\_]+): ([A-Za-zÀ-Ỹà-ỹ\s\\_.,]+)/g;
+                        let match;
+                        let lastMeaningEnd = 0;
+
+                        // Collect all examples first
+                        let tempExamples = [];
+                        let currentMeaningPart = meaning;
+
+                        // Iterate through matches to extract examples
+                        while ((match = exampleRegex.exec(currentMeaningPart)) !== null) {
+                            // Add the matched example to tempExamples
+                            tempExamples.push(match[0].trim());
+                            // Update the last meaning end to exclude this example
+                            lastMeaningEnd = match.index + match[0].length;
+                        }
+
+                        // If examples were found, the meaning is the part before the first example
+                        if (tempExamples.length > 0) {
+                            const firstExampleIndex = meaning.indexOf(tempExamples[0]);
+                            if (firstExampleIndex !== -1) {
+                                meaning = meaning.substring(0, firstExampleIndex).trim();
+                            }
+                            examples.push(...tempExamples);
+                        } else {
+                            // If no clear "Ede: Viet" examples found, but still complex, keep original meaning, no inline examples.
+                            // The examples array will remain empty for this entry unless explicitly provided in rawData.
+                        }
+                        
+                        // Handle cases where examples are provided in the original `examples` array (not from `vietnamese` string)
+                        if (entry.examples && entry.examples.length > 0) {
+                            examples.push(...entry.examples);
+                        }
+
+                    } else {
+                        // Simple case: "Meaning. Example."
+                        const parts = meaning.split('. ');
+                        meaning = parts[0].trim();
+                        if (parts.length > 1) {
+                            // If there are more parts after the first dot, they are examples
+                            const potentialExamples = parts.slice(1).join('. ').trim();
+                            if (potentialExamples) {
+                                // Split by semicolon for multiple examples on one line
+                                potentialExamples.split(';').forEach(ex => {
+                                    const trimmedEx = ex.trim();
+                                    if (trimmedEx) {
+                                        examples.push(trimmedEx);
+                                    }
+                                });
+                            }
+                        }
+                    }
+
+                    return {
+                        ede: entry.ede,
+                        type: entry.type,
+                        vietnamese: meaning,
+                        examples: examples
+                    };
+                });
+            }, []);
+
 
             // Function to display a modal message
             const showMessage = (msg) => {
@@ -417,9 +506,10 @@
 
             const translateWord = async (word, direction) => {
                 const lowerCaseWord = word.trim().toLowerCase();
-                let foundEntry = null;
-                let translatedText = '';
-                let prompt = '';
+                let dictionaryResult = null;
+                let aiTranslatedText = '';
+                let finalMeaning = '';
+                let aiPrompt = '';
 
                 setIsLoadingTextTranslate(true);
                 setVietnameseMeaning('Đang tìm kiếm bản dịch...');
@@ -427,82 +517,86 @@
                 setShowGenerateExampleButton(false);
 
                 try {
+                    // Step 1: Search in internal dictionary
                     if (direction === 'edeToViet') {
-                        // Search in internal dictionary (Êđê to Việt)
-                        foundEntry = dictionaryData.find(entry => entry.ede.toLowerCase() === lowerCaseWord);
+                        const foundEntry = dictionaryData.find(entry => entry.ede.toLowerCase() === lowerCaseWord);
                         if (foundEntry) {
-                            translatedText = `(${foundEntry.type}) ${foundEntry.vietnamese} (Từ điển nội bộ)`;
+                            dictionaryResult = `(${foundEntry.type}) ${foundEntry.vietnamese} (Từ điển nội bộ)`;
                             if (foundEntry.examples && foundEntry.examples.length > 0) {
                                 setExampleSentence(foundEntry.examples.join('\n'));
-                            } else {
-                                setExampleSentence('Không có ví dụ trong từ điển.');
-                                setShowGenerateExampleButton(true); // Allow AI example generation
                             }
-                        } else {
-                            // If not found in dictionary, prepare prompt for AI translation
-                            prompt = `Dịch từ Êđê sau sang tiếng Việt: "${word}". Chỉ trả về bản dịch thuần túy, không có giải thích hay định dạng gì thêm. Nếu không biết, hãy trả lời "Không tìm thấy".`;
                         }
+                        aiPrompt = `Dịch từ Êđê sau sang tiếng Việt: "${word}". Chỉ trả về bản dịch thuần túy, không có giải thích hay định dạng gì thêm. Nếu không biết, hãy trả lời "Không tìm thấy".`;
                     } else { // direction === 'vietToEde'
-                        // Search in internal dictionary (Việt to Êđê)
-                        foundEntry = dictionaryData.find(entry => entry.vietnamese.toLowerCase().includes(lowerCaseWord));
+                        const foundEntry = dictionaryData.find(entry => entry.vietnamese.toLowerCase().includes(lowerCaseWord));
                         if (foundEntry) {
-                            translatedText = `${foundEntry.ede} (Từ điển nội bộ)`;
+                            dictionaryResult = `${foundEntry.ede} (Từ điển nội bộ)`;
                             if (foundEntry.examples && foundEntry.examples.length > 0) {
                                 setExampleSentence(foundEntry.examples.join('\n'));
-                            } else {
-                                setExampleSentence('Không có ví dụ trong từ điển.');
-                                setShowGenerateExampleButton(true); // Allow AI example generation
                             }
-                        } else {
-                            // If not found in dictionary, prepare prompt for AI translation
-                            prompt = `Dịch từ tiếng Việt sau sang tiếng Êđê: "${word}". Chỉ trả về bản dịch thuần túy, không có giải thích hay định dạng gì thêm. Nếu không biết, hãy trả lời "Không tìm thấy".`;
+                        }
+                        aiPrompt = `Dịch từ tiếng Việt sau sang tiếng Êđê: "${word}". Chỉ trả về bản dịch thuần túy, không có giải thích hay định dạng gì thêm. Nếu không biết, hãy trả lời "Không tìm thấy".`;
+                    }
+
+                    // Step 2: Call AI API for translation (always call)
+                    let chatHistory = [];
+                    chatHistory.push({ role: "user", parts: [{ text: aiPrompt }] });
+                    const payload = { contents: chatHistory };
+                    const apiKey = "AIzaSyDJ7ECoH5VagzAqaZ5QrBFS2Yx-mWbHmOg"; // API key is automatically provided by the Canvas environment
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                    
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    // Handle AI API response
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error(`API Error: Status ${response.status}, Status Text: ${response.statusText}, Body: ${errorText}`);
+                        let errorMessage = `Lỗi API: ${response.status} - ${response.statusText}`;
+                        try {
+                            const errorJson = JSON.parse(errorText);
+                            if (errorJson.error && errorJson.error.message) {
+                                errorMessage = `Lỗi API: ${errorJson.error.message}`;
+                            }
+                        } catch (e) {
+                            // Not a JSON error, use the raw text
+                        }
+                        throw new Error(errorMessage);
+                    }
+
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        if (!text.toLowerCase().includes("không tìm thấy")) {
+                            aiTranslatedText = `${text} (Dịch bởi AI)`;
                         }
                     }
 
-                    if (foundEntry) {
-                        setVietnameseMeaning(translatedText);
-                        // Show example button if it's an Ede-to-Viet translation or if the dictionary entry had no examples
-                        setShowGenerateExampleButton(direction === 'edeToViet' || (foundEntry.examples && foundEntry.examples.length === 0));
+                    // Step 3: Combine and display results
+                    if (dictionaryResult && aiTranslatedText) {
+                        finalMeaning = `${dictionaryResult}\n\n${aiTranslatedText}`;
+                    } else if (dictionaryResult) {
+                        finalMeaning = dictionaryResult;
+                    } else if (aiTranslatedText) {
+                        finalMeaning = aiTranslatedText;
                     } else {
-                        // Use AI for translation if not found in dictionary
-                        let chatHistory = [];
-                        chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-                        const payload = { contents: chatHistory };
-                        const apiKey = "AIzaSyDJ7ECoH5VagzAqaZ5QrBFS2Yx-mWbHmOg"; // API key is automatically provided by the Canvas environment
-                        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-                        const response = await fetch(apiUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
-                        });
-
-                        // Handle API response
-                        if (!response.ok) {
-                            const errorDetails = response.statusText || `Lỗi không xác định (Mã: ${response.status})`;
-                            if (response.status === 403) {
-                                throw new Error(`Lỗi API: Quyền truy cập bị từ chối (Mã: 403). Vui lòng kiểm tra cấu hình API key.`);
-                            }
-                            throw new Error(`Lỗi API dịch văn bản: ${errorDetails}`);
-                        }
-
-                        const result = await response.json();
-                        if (result.candidates && result.candidates.length > 0 &&
-                            result.candidates[0].content && result.candidates[0].content.parts &&
-                            result.candidates[0].content.parts.length > 0) {
-                            const text = result.candidates[0].content.parts[0].text;
-                            if (text.toLowerCase().includes("không tìm thấy")) {
-                                setVietnameseMeaning(`Không tìm thấy từ này trong từ điển hoặc qua AI.`);
-                                setShowGenerateExampleButton(false);
-                            } else {
-                                setVietnameseMeaning(`${text} (Dịch bởi AI)`);
-                                // Only show example button if original input was Ede and translated by AI
-                                setShowGenerateExampleButton(direction === 'edeToViet');
-                            }
-                        } else {
-                            setVietnameseMeaning("Không thể dịch từ này bằng AI.");
-                            setShowGenerateExampleButton(false);
-                        }
+                        finalMeaning = "Không tìm thấy từ này trong từ điển hoặc qua AI.";
                     }
+                    setVietnameseMeaning(finalMeaning);
+
+                    // Determine whether to show generate example button
+                    // Show if Ede to Viet and either no dictionary example or no dictionary entry at all
+                    if (direction === 'edeToViet' && (!foundEntry || (foundEntry && foundEntry.examples && foundEntry.examples.length === 0))) {
+                        setShowGenerateExampleButton(true);
+                    } else {
+                        setShowGenerateExampleButton(false);
+                    }
+
                 } catch (error) {
                     console.error("Lỗi khi dịch:", error);
                     showMessage("Đã xảy ra lỗi khi dịch từ: " + error.message);
@@ -537,11 +631,18 @@
 
                     // Handle API response
                     if (!response.ok) {
-                        const errorDetails = response.statusText || `Lỗi không xác định (Mã: ${response.status})`;
-                        if (response.status === 403) {
-                            throw new Error(`Lỗi API: Quyền truy cập bị từ chối (Mã: 403). Vui lòng kiểm tra cấu hình API key.`);
+                        const errorText = await response.text();
+                        console.error(`API Error: Status ${response.status}, Status Text: ${response.statusText}, Body: ${errorText}`);
+                        let errorMessage = `Lỗi API: ${response.status} - ${response.statusText}`;
+                        try {
+                            const errorJson = JSON.parse(errorText);
+                            if (errorJson.error && errorJson.error.message) {
+                                errorMessage = `Lỗi API: ${errorJson.error.message}`;
+                            }
+                        } catch (e) {
+                            // Not a JSON error, use the raw text
                         }
-                        throw new Error(`Lỗi API tạo ví dụ: ${errorDetails}`);
+                        throw new Error(errorMessage);
                     }
 
                     const result = await response.json();
@@ -621,11 +722,18 @@
 
                     // Handle API response for text extraction
                     if (!responseExtract.ok) {
-                        const errorDetails = responseExtract.statusText || `Lỗi không xác định (Mã: ${responseExtract.status})`;
-                        if (responseExtract.status === 403) {
-                            throw new Error(`Lỗi API: Quyền truy cập bị từ chối (Mã: 403). Vui lòng kiểm tra cấu hình API key.`);
+                        const errorText = await responseExtract.text();
+                        console.error(`API Error: Status ${responseExtract.status}, Status Text: ${responseExtract.statusText}, Body: ${errorText}`);
+                        let errorMessage = `Lỗi API trích xuất văn bản: ${responseExtract.status} - ${responseExtract.statusText}`;
+                        try {
+                            const errorJson = JSON.parse(errorText);
+                            if (errorJson.error && errorJson.error.message) {
+                                errorMessage = `Lỗi API trích xuất văn bản: ${errorJson.error.message}`;
+                            }
+                        } catch (e) {
+                            // Not a JSON error, use the raw text
                         }
-                        throw new Error(`Lỗi API trích xuất văn bản: ${errorDetails}`);
+                        throw new Error(errorMessage);
                     }
 
                     const resultExtract = await responseExtract.json();
@@ -651,11 +759,18 @@
 
                         // Handle API response for translation
                         if (!responseTranslate.ok) {
-                            const errorDetails = responseTranslate.statusText || `Lỗi không xác định (Mã: ${responseTranslate.status})`;
-                            if (responseTranslate.status === 403) {
-                                throw new Error(`Lỗi API: Quyền truy cập bị từ chối (Mã: 403). Vui lòng kiểm tra cấu hình API key.`);
+                            const errorText = await responseTranslate.text();
+                            console.error(`API Error: Status ${responseTranslate.status}, Status Text: ${responseTranslate.statusText}, Body: ${errorText}`);
+                            let errorMessage = `Lỗi API dịch văn bản: ${responseTranslate.status} - ${responseTranslate.statusText}`;
+                            try {
+                                const errorJson = JSON.parse(errorText);
+                                if (errorJson.error && errorJson.error.message) {
+                                    errorMessage = `Lỗi API dịch văn bản: ${errorJson.error.message}`;
+                                }
+                            } catch (e) {
+                                // Not a JSON error, use the raw text
                             }
-                            throw new Error(`Lỗi API dịch văn bản: ${errorDetails}`);
+                            throw new Error(errorMessage);
                         }
 
                         const resultTranslate = await responseTranslate.json();
@@ -701,11 +816,18 @@
 
                     // Handle API response
                     if (!response.ok) {
-                        const errorDetails = response.statusText || `Lỗi không xác định (Mã: ${response.status})`;
-                        if (response.status === 403) {
-                            throw new Error(`Lỗi API: Quyền truy cập bị từ chối (Mã: 403). Vui lòng kiểm tra cấu hình API key.`);
+                        const errorText = await response.text();
+                        console.error(`API Error: Status ${response.status}, Status Text: ${response.statusText}, Body: ${errorText}`);
+                        let errorMessage = `Lỗi API tạo đoạn văn: ${response.status} - ${response.statusText}`;
+                        try {
+                            const errorJson = JSON.parse(errorText);
+                            if (errorJson.error && errorJson.error.message) {
+                                errorMessage = `Lỗi API tạo đoạn văn: ${errorJson.error.message}`;
+                            }
+                        } catch (e) {
+                            // Not a JSON error, use the raw text
                         }
-                        throw new Error(`Lỗi API tạo đoạn văn: ${errorDetails}`);
+                        throw new Error(errorMessage);
                     }
 
                     const result = await response.json();
@@ -775,11 +897,18 @@
 
                     // Handle API response
                     if (!response.ok) {
-                        const errorDetails = response.statusText || `Lỗi không xác định (Mã: ${response.status})`;
-                        if (response.status === 403) {
-                            throw new Error(`Lỗi API: Quyền truy cập bị từ chối (Mã: 403). Vui lòng kiểm tra cấu hình API key.`);
+                        const errorText = await response.text();
+                        console.error(`API Error: Status ${response.status}, Status Text: ${response.statusText}, Body: ${errorText}`);
+                        let errorMessage = `Lỗi API giải thích: ${response.status} - ${response.statusText}`;
+                        try {
+                            const errorJson = JSON.parse(errorText);
+                            if (errorJson.error && errorJson.error.message) {
+                                errorMessage = `Lỗi API giải thích: ${errorJson.error.message}`;
+                            }
+                        } catch (e) {
+                            // Not a JSON error, use the raw text
                         }
-                        throw new Error(`Lỗi API giải thích: ${errorDetails}`);
+                        throw new Error(errorMessage);
                     }
 
                     const result = await response.json();
@@ -1108,7 +1237,7 @@
                                         {isLoadingTextTranslate ? (
                                             <div className="loader mx-auto my-4"></div>
                                         ) : (
-                                            <p className="text-gray-800 dark:text-gray-100 text-base">
+                                            <p className="text-gray-800 dark:text-gray-100 text-base whitespace-pre-wrap">
                                                 {vietnameseMeaning || "Kết quả sẽ hiển thị ở đây."}
                                             </p>
                                         )}

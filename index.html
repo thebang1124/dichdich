@@ -128,15 +128,6 @@
             const [isAuthenticated, setIsAuthenticated] = useState(false);
             const [authLoading, setAuthLoading] = useState(true); // To show loading state during Firebase init
 
-            // Translation States
-            const [edeWord, setEdeWord] = useState(''); // Input for translation
-            const [vietnameseMeaning, setVietnameseMeaning] = useState(''); // Output of translation
-            const [isLoadingTextTranslate, setIsLoadingTextTranslate] = useState(false); // Loading indicator for text translation
-            const [showGenerateExampleButton, setShowGenerateExampleButton] = useState(false); // To show/hide example generation button
-            const [exampleSentence, setExampleSentence] = useState(''); // Example sentence output
-            const [isLoadingExample, setIsLoadingExample] = useState(false); // Loading indicator for example generation
-            const [translationDirection, setTranslationDirection] = useState('edeToViet'); // 'edeToViet' or 'vietToEde'
-
             // Image Translation States
             const [imageSrc, setImageSrc] = useState(null); // Base64 string of the uploaded image
             const [imageFile, setImageFile] = useState(null); // File object to get MIME type

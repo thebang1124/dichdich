@@ -1,107 +1,560 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Công cụ Dịch Toàn diện Êđê-Việt</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome CDN for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Tùy chỉnh CSS cho giao diện tối */
+        body.dark {
+            background-color: #1a202c;
+            color: #e2e8f0;
+        }
 
-// Khởi tạo Firebase từ biến toàn cục
-// Mặc dù Firestore không được sử dụng trong bản này, nhưng việc thiết lập auth
-// là cần thiết cho môi trường Canvas để đảm bảo tính sẵn sàng cho các tính năng tương lai.
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-const __initial_auth_token = typeof window !== 'undefined' ? window.__initial_auth_token : undefined;
+        .dark .bg-white {
+            background-color: #2d3748;
+        }
+        
+        .dark .text-gray-900 {
+            color: #e2e8f0;
+        }
 
-const app = Object.keys(firebaseConfig).length > 0 ? initializeApp(firebaseConfig) : null;
-const auth = app ? getAuth(app) : null;
+        .dark .text-gray-600 {
+            color: #cbd5e0;
+        }
 
-// Thư viện Font Awesome để sử dụng các biểu tượng (icon)
-// Trong môi trường này, cách đơn giản nhất là dùng CDN.
-const FontAwesomeStyle = () => (
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-);
+        .dark .border-gray-300 {
+            border-color: #4a5568;
+        }
 
-// Hàm chuyển đổi tệp hình ảnh thành chuỗi Base64
-const convertImageToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result.split(',')[1]);
-        reader.onerror = error => reject(error);
-    });
-};
+        .dark .bg-gray-50 {
+            background-color: #4a5568;
+        }
 
-const App = () => {
-    // State quản lý giao diện và dữ liệu ứng dụng
-    const [activeTab, setActiveTab] = useState('text'); // Tab hiện tại: 'text' hoặc 'image'
-    const [edeInput, setEdeInput] = useState(''); // Văn bản Êđê người dùng nhập
-    const [vietOutput, setVietOutput] = useState(''); // Văn bản tiếng Việt đã dịch
-    const [imageFile, setImageFile] = useState(null); // Tệp hình ảnh được chọn
-    const [imagePreviewUrl, setImagePreviewUrl] = useState(''); // URL xem trước của hình ảnh
-    const [prompt, setPrompt] = useState('Dịch toàn bộ văn bản trong ảnh này sang tiếng Việt.'); // Yêu cầu dịch ảnh
-    const [imageTranslatedText, setImageTranslatedText] = useState(''); // Văn bản dịch từ ảnh
-    const [loading, setLoading] = useState(false); // Trạng thái tải (loading)
-    const [message, setMessage] = useState(''); // Thông báo cho người dùng
-    const [isRecording, setIsRecording] = useState(false); // Trạng thái ghi âm
-    const [isAuthReady, setIsAuthReady] = useState(false); // Trạng thái sẵn sàng của Firebase Auth
-    const [translationDirection, setTranslationDirection] = useState('edeToViet'); // Hướng dịch: 'edeToViet' hoặc 'vietToEde'
-    
-    const recognitionRef = useRef(null); // Tham chiếu đến đối tượng SpeechRecognition
-    const themeRef = useRef(localStorage.getItem('theme') || 'light'); // Chế độ giao diện sáng/tối
+        .dark .text-gray-800 {
+            color: #e2e8f0;
+        }
 
-    // Khởi tạo Firebase Authentication
-    useEffect(() => {
-        const handleSignIn = async () => {
-            if (auth) {
-                try {
-                    // Đăng nhập bằng token tùy chỉnh hoặc ẩn danh
-                    if (__initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                } catch (err) {
-                    console.error("Lỗi Firebase Auth:", err);
-                } finally {
-                    setIsAuthReady(true);
-                }
+        .dark .hover\\:bg-gray-200:hover {
+            background-color: #4a5568;
+        }
+
+        /* Hiệu ứng spinner */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 1rem;
+            height: 1rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Căn chỉnh lại vị trí nút đổi chiều cho thiết bị di động */
+        @media (max-width: 767px) {
+            .swap-button-container {
+                position: static !important;
+                transform: none !important;
+                margin-top: 1rem;
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-900 transition-colors duration-300">
+
+    <!-- Container chính của ứng dụng -->
+    <div id="app" class="min-h-screen p-4"></div>
+
+    <!-- Script JavaScript chính -->
+    <script type="module">
+        // ============================================================================================================
+        //                                          KHỞI TẠO ỨNG DỤNG VÀ THƯ VIỆN
+        // ============================================================================================================
+        
+        // Nhập các module cần thiết từ Firebase CDN
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        
+        // Cấu hình Firebase từ biến toàn cục của Canvas
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : undefined;
+        
+        let auth;
+        if (Object.keys(firebaseConfig).length > 0) {
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+        }
+
+        let isAuthReady = false;
+        
+        // ============================================================================================================
+        //                                          QUẢN LÝ TRẠNG THÁI VÀ DOM
+        // ============================================================================================================
+        
+        // Đối tượng quản lý trạng thái của ứng dụng
+        const state = {
+            activeTab: 'text',
+            edeInput: '',
+            vietOutput: '',
+            imageFile: null,
+            imagePreviewUrl: '',
+            prompt: 'Dịch toàn bộ văn bản trong ảnh này sang tiếng Việt.',
+            imageTranslatedText: '',
+            loading: false,
+            message: null,
+            isRecording: false,
+            translationDirection: 'edeToViet', // 'edeToViet' hoặc 'vietToEde'
+            theme: localStorage.getItem('theme') || 'light',
+            recognition: null, // Đối tượng SpeechRecognition
+        };
+
+        // Hàm để cập nhật UI dựa trên trạng thái hiện tại
+        const renderApp = () => {
+            const appContainer = document.getElementById('app');
+            if (!appContainer) return;
+
+            // Xây dựng template HTML bằng các chuỗi template
+            const html = `
+                <div class="container mx-auto p-8 rounded-2xl shadow-2xl max-w-6xl w-full bg-white dark:bg-gray-800 relative">
+                    <button id="theme-toggle" class="absolute top-4 right-4 p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-300">
+                        <i class="fas ${state.theme === 'light' ? 'fa-moon' : 'fa-sun'} text-xl"></i>
+                    </button>
+                    
+                    <h1 class="text-4xl font-extrabold text-center mb-2 text-blue-600 dark:text-blue-400">
+                        Công Cụ Dịch Toàn Diện
+                    </h1>
+                    <p class="text-center text-gray-600 dark:text-gray-400 mb-8">
+                        Dịch văn bản, ghi âm và dịch ảnh
+                    </p>
+
+                    <!-- Thanh điều hướng -->
+                    <div class="flex justify-center mb-8">
+                        <button id="tab-text" class="px-6 py-3 rounded-l-full font-bold transition-all duration-300
+                            ${state.activeTab === 'text' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}">
+                            Dịch Văn Bản
+                        </button>
+                        <button id="tab-image" class="px-6 py-3 rounded-r-full font-bold transition-all duration-300
+                            ${state.activeTab === 'image' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}">
+                            Dịch Ảnh
+                        </button>
+                    </div>
+
+                    <!-- Khung thông báo -->
+                    ${state.message ? `
+                        <div class="mb-4 p-4 rounded-lg text-center ${state.message.type === 'error' ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200' :
+                                                                          state.message.type === 'success' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200' :
+                                                                          'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'}">
+                            ${state.message.text}
+                        </div>
+                    ` : ''}
+
+                    <!-- Nội dung tab -->
+                    ${renderTabContent()}
+                </div>
+            `;
+            appContainer.innerHTML = html;
+            addEventListeners();
+        };
+
+        const renderTabContent = () => {
+            if (state.activeTab === 'text') {
+                return `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
+                        <!-- Khung nhập liệu -->
+                        <div class="flex flex-col">
+                            <div class="flex items-center justify-between mb-2">
+                                <label for="input-text" class="block text-lg font-semibold">
+                                    ${state.translationDirection === 'edeToViet' ? 'Tiếng Êđê' : 'Tiếng Việt'}
+                                </label>
+                                <div class="flex items-center space-x-2">
+                                    <button id="record-btn" class="p-2 rounded-full transition-colors duration-300 ${state.isRecording ? 'text-red-500 animate-pulse' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}" title="Ghi âm">
+                                        <i class="fas fa-microphone text-xl"></i>
+                                    </button>
+                                    <button id="speak-input-btn" class="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-300" title="Phát âm">
+                                        <i class="fas fa-volume-up text-xl"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <textarea id="input-text" class="w-full h-80 p-4 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 resize-none bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                                placeholder="Nhập văn bản ${state.translationDirection === 'edeToViet' ? 'tiếng Êđê' : 'tiếng Việt'}...">${state.translationDirection === 'edeToViet' ? state.edeInput : state.vietOutput}</textarea>
+                        </div>
+                        
+                        <!-- Nút đảo chiều -->
+                        <div class="swap-button-container flex justify-center items-center md:absolute md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 z-10">
+                            <button id="swap-btn" class="p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300" title="Đảo chiều dịch">
+                                <i class="fas fa-exchange-alt"></i>
+                            </button>
+                        </div>
+
+                        <!-- Khung hiển thị kết quả -->
+                        <div class="flex flex-col">
+                            <div class="flex items-center justify-between mb-2">
+                                <label for="output-text" class="block text-lg font-semibold">
+                                    ${state.translationDirection === 'edeToViet' ? 'Tiếng Việt' : 'Tiếng Êđê'}
+                                </label>
+                                <button id="speak-output-btn" class="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-300" title="Phát âm">
+                                    <i class="fas fa-volume-up text-xl"></i>
+                                </button>
+                            </div>
+                            <textarea id="output-text" readonly class="w-full h-80 p-4 border border-gray-300 dark:border-gray-600 rounded-xl resize-none bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                                placeholder="Bản dịch sẽ xuất hiện ở đây...">${state.translationDirection === 'edeToViet' ? state.vietOutput : state.edeInput}</textarea>
+                        </div>
+                    </div>
+                    <div class="mt-8 flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                        <button id="translate-btn" class="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-bold rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300 ${state.loading || state.isRecording ? 'opacity-50 cursor-not-allowed' : ''}">
+                            <i class="fas fa-language mr-2"></i>
+                            Dịch văn bản
+                        </button>
+                        <button id="clear-btn" class="w-full sm:w-auto px-6 py-3 bg-red-500 text-white font-bold rounded-full shadow-lg hover:bg-red-600 focus:outline-none focus:ring-4 focus:ring-red-300 transition-all duration-300 ${state.loading || state.isRecording ? 'opacity-50 cursor-not-allowed' : ''}">
+                            <i class="fas fa-times mr-2"></i>
+                            Xóa
+                        </button>
+                    </div>
+                `;
+            } else { // activeTab === 'image'
+                return `
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <!-- Khu vực tải ảnh lên -->
+                        <div class="md:w-1/2 flex flex-col items-center">
+                            <div class="w-full flex flex-col items-center p-4 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 mb-4">
+                                <label for="file-upload" class="block text-lg font-medium mb-2 text-center">
+                                    Tải ảnh lên
+                                </label>
+                                <input id="file-upload" type="file" accept="image/*" class="w-full cursor-pointer file:mr-4 file:py-2 file:px-4
+                                                                file:rounded-full file:border-0
+                                                                file:text-sm file:font-semibold
+                                                                file:bg-blue-50 file:text-blue-700
+                                                                hover:file:bg-blue-100" />
+                            </div>
+                            ${state.imagePreviewUrl ? `
+                                <div class="border-2 border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden max-w-full">
+                                    <img src="${state.imagePreviewUrl}" alt="Preview" class="w-full h-auto" />
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <!-- Khu vực kết quả -->
+                        <div class="md:w-1/2 flex flex-col">
+                            <label for="prompt-input" class="block text-lg font-medium mb-2">
+                                Yêu cầu dịch văn bản
+                            </label>
+                            <textarea id="prompt-input" rows="4" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors mb-4"
+                                placeholder="Nhập yêu cầu dịch của bạn...">${state.prompt}</textarea>
+                            <button id="image-translate-btn" class="px-6 py-3 rounded-full font-bold text-white shadow-lg transition-all duration-300
+                                ${state.loading || !state.imageFile ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300'}">
+                                ${state.loading ? `
+                                    <div class="flex items-center justify-center">
+                                        <div class="spinner -ml-1 mr-3"></div>
+                                        Đang dịch ảnh...
+                                    </div>
+                                ` : 'Dịch ảnh'}
+                            </button>
+                            ${state.imageTranslatedText ? `
+                                <div class="mt-6">
+                                    <h2 class="text-2xl font-bold mb-2 text-green-600 dark:text-green-400">
+                                        Kết quả dịch:
+                                    </h2>
+                                    <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+                                        <p class="whitespace-pre-wrap">${state.imageTranslatedText}</p>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
             }
         };
-        handleSignIn();
-    }, []);
 
-    // Cập nhật chế độ sáng/tối khi tải trang
-    useEffect(() => {
-        document.body.classList.toggle('dark', themeRef.current === 'dark');
-    }, []);
+        const addEventListeners = () => {
+            // Loại bỏ các listener cũ để tránh trùng lặp
+            const appContainer = document.getElementById('app');
+            const newAppContainer = appContainer.cloneNode(true);
+            appContainer.parentNode.replaceChild(newAppContainer, appContainer);
 
-    // Chuyển đổi giữa chế độ sáng và tối
-    const toggleTheme = () => {
-        const newTheme = themeRef.current === 'light' ? 'dark' : 'light';
-        themeRef.current = newTheme;
-        localStorage.setItem('theme', newTheme);
-        document.body.classList.toggle('dark');
-    };
-    
-    // Hiển thị thông báo đến người dùng
-    const showMessage = (msg, type = 'info') => {
-        setMessage({ text: msg, type });
-        setTimeout(() => setMessage(''), 5000); // Tự động ẩn thông báo sau 5 giây
-    };
+            // Gắn lại các listener vào DOM mới
+            newAppContainer.querySelector('#theme-toggle').addEventListener('click', toggleTheme);
+            newAppContainer.querySelector('#tab-text').addEventListener('click', () => {
+                state.activeTab = 'text';
+                renderApp();
+            });
+            newAppContainer.querySelector('#tab-image').addEventListener('click', () => {
+                state.activeTab = 'image';
+                renderApp();
+            });
 
-    // Hàm gọi API của Gemini để dịch văn bản
-    const translateWithGeminiAPI = async (text, direction) => {
-        if (!text) return '';
-        let retries = 0;
-        const maxRetries = 5;
-        let delay = 1000;
+            if (state.activeTab === 'text') {
+                newAppContainer.querySelector('#input-text').addEventListener('input', (e) => {
+                    if (state.translationDirection === 'edeToViet') {
+                        state.edeInput = e.target.value;
+                    } else {
+                        state.vietOutput = e.target.value;
+                    }
+                });
+                newAppContainer.querySelector('#record-btn').addEventListener('click', () => {
+                    state.isRecording ? stopRecording() : startRecording();
+                });
+                newAppContainer.querySelector('#speak-input-btn').addEventListener('click', () => {
+                    const text = state.translationDirection === 'edeToViet' ? state.edeInput : state.vietOutput;
+                    speakText(text, 'vi-VN');
+                });
+                newAppContainer.querySelector('#speak-output-btn').addEventListener('click', () => {
+                    const text = state.translationDirection === 'edeToViet' ? state.vietOutput : state.edeInput;
+                    speakText(text, 'vi-VN');
+                });
+                newAppContainer.querySelector('#swap-btn').addEventListener('click', handleSwapDirection);
+                newAppContainer.querySelector('#translate-btn').addEventListener('click', handleTextTranslate);
+                newAppContainer.querySelector('#clear-btn').addEventListener('click', () => {
+                    state.edeInput = '';
+                    state.vietOutput = '';
+                    renderApp();
+                });
+            } else { // activeTab === 'image'
+                newAppContainer.querySelector('#file-upload').addEventListener('change', handleImageChange);
+                newAppContainer.querySelector('#prompt-input').addEventListener('input', (e) => {
+                    state.prompt = e.target.value;
+                });
+                newAppContainer.querySelector('#image-translate-btn').addEventListener('click', handleImageTranslate);
+            }
+        };
+
+        // ============================================================================================================
+        //                                          HÀM XỬ LÝ CHỨC NĂNG
+        // ============================================================================================================
         
-        const promptTemplate = direction === 'edeToViet' ?
-            `Dịch văn bản sau từ tiếng Êđê sang tiếng Việt.\nĐoạn văn bản Êđê: ${text}` :
-            `Dịch văn bản sau từ tiếng Việt sang tiếng Êđê.\nĐoạn văn bản tiếng Việt: ${text}`;
+        // Hàm chuyển đổi chế độ sáng/tối
+        const toggleTheme = () => {
+            state.theme = state.theme === 'light' ? 'dark' : 'light';
+            localStorage.setItem('theme', state.theme);
+            document.body.classList.toggle('dark');
+            renderApp();
+        };
 
-        while (retries < maxRetries) {
+        // Hàm hiển thị thông báo
+        const showMessage = (text, type = 'info') => {
+            state.message = { text, type };
+            renderApp();
+            setTimeout(() => {
+                state.message = null;
+                renderApp();
+            }, 5000);
+        };
+        
+        // Hàm gọi API của Gemini để dịch văn bản
+        const translateWithGeminiAPI = async (text, direction) => {
+            if (!text) return '';
+            let retries = 0;
+            const maxRetries = 5;
+            let delay = 1000;
+            
+            const promptTemplate = direction === 'edeToViet' ?
+                `Dịch văn bản sau từ tiếng Êđê sang tiếng Việt.\nĐoạn văn bản Êđê: ${text}` :
+                `Dịch văn bản sau từ tiếng Việt sang tiếng Êđê.\nĐoạn văn bản tiếng Việt: ${text}`;
+
+            while (retries < maxRetries) {
+                try {
+                    const payload = {
+                        contents: [{ role: "user", parts: [{ text: promptTemplate }] }]
+                    };
+                    const apiKey = "AIzaSyBVCTx8fPnGWFprwoT9bgixio_NUgvNG4k";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 429) {
+                            retries++;
+                            await new Promise(res => setTimeout(res, delay));
+                            delay *= 2;
+                            continue;
+                        }
+                        throw new Error(`Lỗi API: ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+                    return result?.candidates?.[0]?.content?.parts?.[0]?.text || 'Không có kết quả dịch.';
+                } catch (error) {
+                    console.error('Lỗi khi gọi API dịch văn bản:', error);
+                    throw error;
+                }
+            }
+            throw new Error('Đã hết số lần thử lại API. Vui lòng thử lại sau.');
+        };
+        
+        // Xử lý sự kiện dịch văn bản chính
+        const handleTextTranslate = async () => {
+            const inputText = state.translationDirection === 'edeToViet' ? state.edeInput : state.vietOutput;
+            if (!inputText.trim()) {
+                showMessage(`Vui lòng nhập văn bản ${state.translationDirection === 'edeToViet' ? 'tiếng Êđê' : 'tiếng Việt'}.`, 'warning');
+                return;
+            }
+
+            state.loading = true;
+            renderApp();
+            showMessage('Đang dịch văn bản...', 'info');
+
             try {
+                const translatedAI = await translateWithGeminiAPI(inputText, state.translationDirection);
+                if (state.translationDirection === 'edeToViet') {
+                    state.vietOutput = translatedAI;
+                } else {
+                    state.edeInput = translatedAI;
+                }
+                showMessage('Dịch văn bản hoàn tất.', 'success');
+            } catch (error) {
+                console.error('Lỗi trong quá trình dịch:', error);
+                showMessage(`Lỗi: ${error.message}. Vui lòng thử lại.`, 'error');
+                state.edeInput = '';
+                state.vietOutput = '';
+            } finally {
+                state.loading = false;
+                renderApp();
+            }
+        };
+
+        // Hàm đảo chiều dịch
+        const handleSwapDirection = () => {
+            state.translationDirection = state.translationDirection === 'edeToViet' ? 'vietToEde' : 'edeToViet';
+            const temp = state.edeInput;
+            state.edeInput = state.vietOutput;
+            state.vietOutput = temp;
+            renderApp();
+        };
+
+        // Bắt đầu ghi âm
+        const startRecording = () => {
+            if (!('webkitSpeechRecognition' in window)) {
+                showMessage('Trình duyệt của bạn không hỗ trợ tính năng ghi âm.', 'error');
+                return;
+            }
+            
+            const recognition = new window.webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'vi-VN';
+
+            recognition.onstart = () => {
+                state.isRecording = true;
+                renderApp();
+                showMessage('Đang nghe... nói gì đó vào mic.', 'info');
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[event.results.length - 1][0].transcript;
+                if (state.translationDirection === 'edeToViet') {
+                    state.edeInput += transcript.trim();
+                } else {
+                    state.vietOutput += transcript.trim();
+                }
+                renderApp();
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Lỗi ghi âm:', event.error);
+                showMessage('Lỗi ghi âm. Vui lòng thử lại.', 'error');
+                state.isRecording = false;
+                renderApp();
+            };
+
+            recognition.onend = () => {
+                state.isRecording = false;
+                renderApp();
+                showMessage('Đã ngừng ghi âm.', 'info');
+            };
+
+            recognition.start();
+            state.recognition = recognition;
+        };
+
+        // Dừng ghi âm
+        const stopRecording = () => {
+            if (state.recognition) {
+                state.recognition.stop();
+            }
+        };
+
+        // Phát âm văn bản
+        const speakText = (text, lang) => {
+            if (!('speechSynthesis' in window)) {
+                showMessage('Trình duyệt của bạn không hỗ trợ tính năng phát âm.', 'error');
+                return;
+            }
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = lang;
+            speechSynthesis.speak(utterance);
+        };
+
+        // Chuyển đổi file ảnh sang Base64
+        const convertImageToBase64 = (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = error => reject(error);
+            });
+        };
+
+        // Xử lý sự kiện thay đổi file ảnh
+        const handleImageChange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                state.imageFile = file;
+                state.imagePreviewUrl = URL.createObjectURL(file);
+            } else {
+                state.imageFile = null;
+                state.imagePreviewUrl = '';
+            }
+            renderApp();
+        };
+
+        // Dịch ảnh
+        const handleImageTranslate = async () => {
+            if (!state.imageFile) {
+                showMessage('Vui lòng tải lên một hình ảnh.', 'error');
+                return;
+            }
+            if (!state.prompt.trim()) {
+                showMessage('Vui lòng nhập yêu cầu dịch.', 'error');
+                return;
+            }
+
+            state.loading = true;
+            state.imageTranslatedText = '';
+            renderApp();
+            showMessage('Đang dịch ảnh...', 'info');
+
+            try {
+                const base64ImageData = await convertImageToBase64(state.imageFile);
+                
                 const payload = {
-                    contents: [{ role: "user", parts: [{ text: promptTemplate }] }]
+                    contents: [
+                        {
+                            role: "user",
+                            parts: [
+                                { text: state.prompt },
+                                {
+                                    inlineData: {
+                                        mimeType: state.imageFile.type,
+                                        data: base64ImageData
+                                    }
+                                }
+                            ]
+                        }
+                    ],
                 };
+                
                 const apiKey = "AIzaSyBVCTx8fPnGWFprwoT9bgixio_NUgvNG4k";
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
@@ -111,419 +564,56 @@ const App = () => {
                     body: JSON.stringify(payload)
                 });
 
-                if (!response.ok) {
-                    if (response.status === 429) {
-                        retries++;
-                        await new Promise(res => setTimeout(res, delay));
-                        delay *= 2;
-                        continue;
-                    }
-                    throw new Error(`Lỗi API: ${response.statusText}`);
-                }
-
                 const result = await response.json();
-                return result?.candidates?.[0]?.content?.parts?.[0]?.text || 'Không có kết quả dịch.';
-            } catch (error) {
-                console.error('Lỗi khi gọi API dịch văn bản:', error);
-                throw error;
-            }
-        }
-        throw new Error('Đã hết số lần thử lại API. Vui lòng thử lại sau.');
-    };
+                const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-    // Xử lý sự kiện dịch văn bản chính
-    const handleTextTranslate = async () => {
-        const inputText = translationDirection === 'edeToViet' ? edeInput : vietOutput;
-        if (!inputText.trim()) {
-            showMessage(`Vui lòng nhập văn bản ${translationDirection === 'edeToViet' ? 'tiếng Êđê' : 'tiếng Việt'}.`, 'warning');
-            return;
-        }
-
-        setLoading(true);
-        showMessage('Đang dịch văn bản...', 'info');
-        try {
-            const translatedAI = await translateWithGeminiAPI(inputText, translationDirection);
-            if (translationDirection === 'edeToViet') {
-                setVietOutput(translatedAI);
-            } else {
-                setEdeInput(translatedAI);
-            }
-            showMessage('Dịch văn bản hoàn tất.', 'success');
-        } catch (error) {
-            console.error('Lỗi trong quá trình dịch:', error);
-            showMessage(`Lỗi: ${error.message}. Vui lòng thử lại.`, 'error');
-            setEdeInput('');
-            setVietOutput('');
-        } finally {
-            setLoading(false);
-        }
-    };
-    
-    // --- Ghi âm (Speech Recognition) ---
-    const startRecording = () => {
-        if (!('webkitSpeechRecognition' in window)) {
-            showMessage('Trình duyệt của bạn không hỗ trợ tính năng ghi âm.', 'error');
-            return;
-        }
-        
-        const recognition = new window.webkitSpeechRecognition();
-        recognition.continuous = false; // Ghi âm một lần duy nhất
-        recognition.interimResults = false;
-        recognition.lang = 'vi-VN'; // Luôn sử dụng tiếng Việt để ghi âm
-
-        recognition.onstart = () => {
-            setIsRecording(true);
-            showMessage('Đang nghe... nói gì đó vào mic.', 'info');
-        };
-
-        recognition.onresult = (event) => {
-            const transcript = event.results[event.results.length - 1][0].transcript;
-            if (translationDirection === 'edeToViet') {
-                setEdeInput(prev => prev + transcript.trim());
-            } else {
-                setVietOutput(prev => prev + transcript.trim());
+                if (text) {
+                    state.imageTranslatedText = text;
+                    showMessage('Dịch ảnh hoàn tất.', 'success');
+                } else {
+                    showMessage('Không thể lấy được bản dịch. Vui lòng thử lại.', 'error');
+                }
+            } catch (err) {
+                console.error('Lỗi trong quá trình dịch ảnh:', err);
+                showMessage(`Lỗi: ${err.message}. Vui lòng thử lại.`, 'error');
+            } finally {
+                state.loading = false;
+                renderApp();
             }
         };
 
-        recognition.onerror = (event) => {
-            console.error('Lỗi ghi âm:', event.error);
-            showMessage('Lỗi ghi âm. Vui lòng thử lại.', 'error');
-            setIsRecording(false);
-        };
+        // ============================================================================================================
+        //                                          KHỞI CHẠY ỨNG DỤNG
+        // ============================================================================================================
 
-        recognition.onend = () => {
-            setIsRecording(false);
-            showMessage('Đã ngừng ghi âm.', 'info');
-        };
-
-        recognition.start();
-        recognitionRef.current = recognition;
-    };
-
-    const stopRecording = () => {
-        if (recognitionRef.current) {
-            recognitionRef.current.stop();
-        }
-    };
-
-    // --- Phát âm (Text-to-Speech) ---
-    const speakText = (text, lang) => {
-        if (!('speechSynthesis' in window)) {
-            showMessage('Trình duyệt của bạn không hỗ trợ tính năng phát âm.', 'error');
-            return;
-        }
-
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = lang;
-        
-        let voices = window.speechSynthesis.getVoices();
-        if (voices.length === 0) {
-            window.speechSynthesis.onvoiceschanged = () => {
-                voices = window.speechSynthesis.getVoices();
-                const desiredVoice = voices.find(voice => voice.lang === lang && voice.name.includes('Google'));
-                if (desiredVoice) utterance.voice = desiredVoice;
-                window.speechSynthesis.speak(utterance);
-            };
-        } else {
-            const desiredVoice = voices.find(voice => voice.lang === lang && voice.name.includes('Google'));
-            if (desiredVoice) utterance.voice = desiredVoice;
-            window.speechSynthesis.speak(utterance);
-        }
-    };
-    
-    // Hàm đảo chiều dịch
-    const handleSwapDirection = () => {
-        setTranslationDirection(prev => prev === 'edeToViet' ? 'vietToEde' : 'edeToViet');
-        // Hoán đổi nội dung của hai ô văn bản
-        const temp = edeInput;
-        setEdeInput(vietOutput);
-        setVietOutput(temp);
-    };
-
-    // --- Xử lý Dịch ảnh ---
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setImageFile(file);
-            setImagePreviewUrl(URL.createObjectURL(file));
-        } else {
-            setImageFile(null);
-            setImagePreviewUrl('');
-        }
-    };
-
-    const handleImageTranslate = async () => {
-        if (!imageFile) {
-            showMessage('Vui lòng tải lên một hình ảnh.', 'error');
-            return;
-        }
-        if (!prompt.trim()) {
-            showMessage('Vui lòng nhập yêu cầu dịch.', 'error');
-            return;
-        }
-
-        setLoading(true);
-        setImageTranslatedText('');
-        showMessage('Đang dịch ảnh...', 'info');
-
-        try {
-            const base64ImageData = await convertImageToBase64(imageFile);
-            
-            const payload = {
-                contents: [
-                    {
-                        role: "user",
-                        parts: [
-                            { text: prompt },
-                            {
-                                inlineData: {
-                                    mimeType: imageFile.type,
-                                    data: base64ImageData
-                                }
-                            }
-                        ]
+        // Xử lý đăng nhập Firebase (mặc định cho môi trường Canvas)
+        const handleSignIn = async () => {
+            if (auth) {
+                try {
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                    } else {
+                        await signInAnonymously(auth);
                     }
-                ],
-            };
-            
-            const apiKey = "AIzaSyBVCTx8fPnGWFprwoT9bgixio_NUgvNG4k";
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            const result = await response.json();
-            const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-            if (text) {
-                setImageTranslatedText(text);
-                showMessage('Dịch ảnh hoàn tất.', 'success');
+                } catch (err) {
+                    console.error("Lỗi Firebase Auth:", err);
+                } finally {
+                    isAuthReady = true;
+                    // Bắt đầu render ứng dụng sau khi auth sẵn sàng
+                    renderApp();
+                }
             } else {
-                showMessage('Không thể lấy được bản dịch. Vui lòng thử lại.', 'error');
+                isAuthReady = true;
+                renderApp();
             }
-        } catch (err) {
-            console.error('Lỗi trong quá trình dịch ảnh:', err);
-            showMessage(`Lỗi: ${err.message}. Vui lòng thử lại.`, 'error');
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
 
-    return (
-        <>
-            <FontAwesomeStyle />
-            <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-4 transition-colors duration-300">
-                <div className="container mx-auto p-8 rounded-2xl shadow-2xl max-w-6xl w-full bg-white dark:bg-gray-800 relative">
-                    <button onClick={toggleTheme} className="absolute top-4 right-4 p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-300">
-                        <i className={`fas ${themeRef.current === 'light' ? 'fa-moon' : 'fa-sun'} text-xl`}></i>
-                    </button>
-                    
-                    <h1 className="text-4xl font-extrabold text-center mb-2 text-blue-600 dark:text-blue-400">
-                        Công Cụ Dịch Toàn Diện
-                    </h1>
-                    <p className="text-center text-gray-600 dark:text-gray-400 mb-8">
-                        Dịch văn bản, ghi âm và dịch ảnh
-                    </p>
+        // Khởi chạy
+        document.addEventListener('DOMContentLoaded', () => {
+            document.body.classList.toggle('dark', state.theme === 'dark');
+            handleSignIn();
+        });
+    </script>
 
-                    {/* Thanh điều hướng */}
-                    <div className="flex justify-center mb-8">
-                        <button
-                            onClick={() => setActiveTab('text')}
-                            className={`px-6 py-3 rounded-l-full font-bold transition-all duration-300
-                                ${activeTab === 'text' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
-                        >
-                            Dịch Văn Bản
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('image')}
-                            className={`px-6 py-3 rounded-r-full font-bold transition-all duration-300
-                                ${activeTab === 'image' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
-                        >
-                            Dịch Ảnh
-                        </button>
-                    </div>
-
-                    {/* Khung thông báo */}
-                    {message && (
-                        <div className={`mb-4 p-4 rounded-lg text-center ${message.type === 'error' ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200' :
-                                                                              message.type === 'success' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200' :
-                                                                              'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'}`}>
-                            {message.text}
-                        </div>
-                    )}
-
-                    {/* Tab Dịch Văn Bản */}
-                    {activeTab === 'text' && (
-                        <>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
-                                {/* Khung nhập liệu (bên trái) */}
-                                <div className="flex flex-col">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <label htmlFor="input-text" className="block text-lg font-semibold">
-                                            {translationDirection === 'edeToViet' ? 'Tiếng Êđê' : 'Tiếng Việt'}
-                                        </label>
-                                        <div className="flex items-center space-x-2">
-                                            <button
-                                                onClick={isRecording ? stopRecording : startRecording}
-                                                className={`p-2 rounded-full transition-colors duration-300 ${isRecording ? 'text-red-500 animate-pulse' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
-                                                title="Ghi âm"
-                                            >
-                                                <i className="fas fa-microphone text-xl"></i>
-                                            </button>
-                                            <button
-                                                onClick={() => speakText(translationDirection === 'edeToViet' ? edeInput : vietOutput, 'vi-VN')}
-                                                className="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-300"
-                                                title="Phát âm"
-                                            >
-                                                <i className="fas fa-volume-up text-xl"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <textarea
-                                        id="input-text"
-                                        value={translationDirection === 'edeToViet' ? edeInput : vietOutput}
-                                        onChange={(e) => translationDirection === 'edeToViet' ? setEdeInput(e.target.value) : setVietOutput(e.target.value)}
-                                        className="w-full h-80 p-4 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 resize-none bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                                        placeholder={`Nhập văn bản ${translationDirection === 'edeToViet' ? 'tiếng Êđê' : 'tiếng Việt'}...`}
-                                    ></textarea>
-                                </div>
-                                
-                                {/* Nút đảo chiều */}
-                                <div className="flex justify-center items-center md:absolute md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 z-10">
-                                    <button
-                                        onClick={handleSwapDirection}
-                                        className="p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300"
-                                        title="Đảo chiều dịch"
-                                    >
-                                        <i className="fas fa-exchange-alt"></i>
-                                    </button>
-                                </div>
-
-                                {/* Khung hiển thị kết quả (bên phải) */}
-                                <div className="flex flex-col">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <label htmlFor="output-text" className="block text-lg font-semibold">
-                                            {translationDirection === 'edeToViet' ? 'Tiếng Việt' : 'Tiếng Êđê'}
-                                        </label>
-                                        <button
-                                            onClick={() => speakText(translationDirection === 'edeToViet' ? vietOutput : edeInput, 'vi-VN')}
-                                            className="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-300"
-                                            title="Phát âm"
-                                        >
-                                            <i className="fas fa-volume-up text-xl"></i>
-                                        </button>
-                                    </div>
-                                    <textarea
-                                        id="output-text"
-                                        value={translationDirection === 'edeToViet' ? vietOutput : edeInput}
-                                        readOnly
-                                        className="w-full h-80 p-4 border border-gray-300 dark:border-gray-600 rounded-xl resize-none bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                                        placeholder="Bản dịch sẽ xuất hiện ở đây..."
-                                    ></textarea>
-                                </div>
-                            </div>
-                            <div className="mt-8 flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
-                                <button
-                                    onClick={handleTextTranslate}
-                                    disabled={loading || isRecording}
-                                    className={`w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-bold rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300 ${loading || isRecording ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    <i className="fas fa-language mr-2"></i>
-                                    Dịch văn bản
-                                </button>
-                                <button
-                                    onClick={() => { setEdeInput(''); setVietOutput(''); }}
-                                    disabled={loading || isRecording}
-                                    className={`w-full sm:w-auto px-6 py-3 bg-red-500 text-white font-bold rounded-full shadow-lg hover:bg-red-600 focus:outline-none focus:ring-4 focus:ring-red-300 transition-all duration-300 ${loading || isRecording ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    <i className="fas fa-times mr-2"></i>
-                                    Xóa
-                                </button>
-                            </div>
-                        </>
-                    )}
-
-                    {/* Tab Dịch Ảnh */}
-                    {activeTab === 'image' && (
-                        <>
-                            <div className="flex flex-col md:flex-row gap-6">
-                                {/* Khu vực tải ảnh lên */}
-                                <div className="md:w-1/2 flex flex-col items-center">
-                                    <div className="w-full flex flex-col items-center p-4 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 mb-4">
-                                        <label htmlFor="file-upload" className="block text-lg font-medium mb-2 text-center">
-                                            Tải ảnh lên
-                                        </label>
-                                        <input
-                                            id="file-upload"
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handleImageChange}
-                                            className="w-full cursor-pointer file:mr-4 file:py-2 file:px-4
-                                                    file:rounded-full file:border-0
-                                                    file:text-sm file:font-semibold
-                                                    file:bg-blue-50 file:text-blue-700
-                                                    hover:file:bg-blue-100"
-                                        />
-                                    </div>
-                                    {imagePreviewUrl && (
-                                        <div className="border-2 border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden max-w-full">
-                                            <img src={imagePreviewUrl} alt="Preview" className="w-full h-auto" />
-                                        </div>
-                                    )}
-                                </div>
-                                
-                                {/* Khu vực kết quả */}
-                                <div className="md:w-1/2 flex flex-col">
-                                    <label htmlFor="prompt-input" className="block text-lg font-medium mb-2">
-                                        Yêu cầu dịch văn bản
-                                    </label>
-                                    <textarea
-                                        id="prompt-input"
-                                        value={prompt}
-                                        onChange={(e) => setPrompt(e.target.value)}
-                                        rows="4"
-                                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors mb-4"
-                                        placeholder="Nhập yêu cầu dịch của bạn..."
-                                    ></textarea>
-                                    <button
-                                        onClick={handleImageTranslate}
-                                        disabled={loading || !imageFile}
-                                        className={`px-6 py-3 rounded-full font-bold text-white shadow-lg transition-all duration-300
-                                            ${loading || !imageFile ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300'}`}
-                                    >
-                                        {loading ? (
-                                            <div className="flex items-center justify-center">
-                                                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
-                                                Đang dịch ảnh...
-                                            </div>
-                                        ) : (
-                                            'Dịch ảnh'
-                                        )}
-                                    </button>
-                                    {imageTranslatedText && (
-                                        <div className="mt-6">
-                                            <h2 className="text-2xl font-bold mb-2 text-green-600 dark:text-green-400">
-                                                Kết quả dịch:
-                                            </h2>
-                                            <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
-                                                <p className="whitespace-pre-wrap">{imageTranslatedText}</p>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </>
-                    )}
-                </div>
-            </div>
-        </>
-    );
-};
-
-export default App;
+</body>
+</html>

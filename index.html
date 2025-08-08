@@ -4,21 +4,21 @@ import { getAuth, signInAnonymously, signInWithCustomToken } from 'firebase/auth
 import { getFirestore } from 'firebase/firestore';
 
 // Khởi tạo Firebase từ biến toàn cục
+// Mặc dù Firestore không được sử dụng trong bản này, nhưng việc thiết lập auth
+// là cần thiết cho môi trường Canvas để đảm bảo tính sẵn sàng cho các tính năng tương lai.
 const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
 const __initial_auth_token = typeof window !== 'undefined' ? window.__initial_auth_token : undefined;
 
 const app = Object.keys(firebaseConfig).length > 0 ? initializeApp(firebaseConfig) : null;
-const db = app ? getFirestore(app) : null;
 const auth = app ? getAuth(app) : null;
 
-// Thư viện Font Awesome cho các biểu tượng
-// Dùng CDN vì không có cách import dễ dàng trong môi trường này
-// Trong một dự án React thực tế, bạn sẽ dùng 'react-icons' hoặc tương tự
+// Thư viện Font Awesome để sử dụng các biểu tượng (icon)
+// Trong môi trường này, cách đơn giản nhất là dùng CDN.
 const FontAwesomeStyle = () => (
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 );
 
-// Hàm chuyển đổi ảnh sang Base64
+// Hàm chuyển đổi tệp hình ảnh thành chuỗi Base64
 const convertImageToBase64 = (file) => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -29,49 +29,50 @@ const convertImageToBase64 = (file) => {
 };
 
 const App = () => {
-    // State quản lý giao diện và dữ liệu
-    const [activeTab, setActiveTab] = useState('text');
-    const [edeInput, setEdeInput] = useState('');
-    const [vietOutput, setVietOutput] = useState('');
-    const [imageFile, setImageFile] = useState(null);
-    const [imagePreviewUrl, setImagePreviewUrl] = useState('');
-    const [prompt, setPrompt] = useState('Dịch toàn bộ văn bản trong ảnh này sang tiếng Việt.');
-    const [imageTranslatedText, setImageTranslatedText] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState('');
-    const [isRecording, setIsRecording] = useState(false);
-    const [isAuthReady, setIsAuthReady] = useState(false);
-    const recognitionRef = useRef(null);
-    const themeRef = useRef(localStorage.getItem('theme') || 'light');
+    // State quản lý giao diện và dữ liệu ứng dụng
+    const [activeTab, setActiveTab] = useState('text'); // Tab hiện tại: 'text' hoặc 'image'
+    const [edeInput, setEdeInput] = useState(''); // Văn bản Êđê người dùng nhập
+    const [vietOutput, setVietOutput] = useState(''); // Văn bản tiếng Việt đã dịch
+    const [imageFile, setImageFile] = useState(null); // Tệp hình ảnh được chọn
+    const [imagePreviewUrl, setImagePreviewUrl] = useState(''); // URL xem trước của hình ảnh
+    const [prompt, setPrompt] = useState('Dịch toàn bộ văn bản trong ảnh này sang tiếng Việt.'); // Yêu cầu dịch ảnh
+    const [imageTranslatedText, setImageTranslatedText] = useState(''); // Văn bản dịch từ ảnh
+    const [loading, setLoading] = useState(false); // Trạng thái tải (loading)
+    const [message, setMessage] = useState(''); // Thông báo cho người dùng
+    const [isRecording, setIsRecording] = useState(false); // Trạng thái ghi âm
+    const [isAuthReady, setIsAuthReady] = useState(false); // Trạng thái sẵn sàng của Firebase Auth
+    const [translationDirection, setTranslationDirection] = useState('edeToViet'); // Hướng dịch: 'edeToViet' hoặc 'vietToEde'
+    
+    const recognitionRef = useRef(null); // Tham chiếu đến đối tượng SpeechRecognition
+    const themeRef = useRef(localStorage.getItem('theme') || 'light'); // Chế độ giao diện sáng/tối
 
-    // Khởi tạo Firebase Auth
+    // Khởi tạo Firebase Authentication
     useEffect(() => {
         const handleSignIn = async () => {
             if (auth) {
                 try {
+                    // Đăng nhập bằng token tùy chỉnh hoặc ẩn danh
                     if (__initial_auth_token) {
                         await signInWithCustomToken(auth, __initial_auth_token);
                     } else {
                         await signInAnonymously(auth);
                     }
                 } catch (err) {
-                    console.error("Firebase Auth Error:", err);
+                    console.error("Lỗi Firebase Auth:", err);
                 } finally {
                     setIsAuthReady(true);
                 }
             }
         };
+        handleSignIn();
+    }, []);
 
-        if (auth && !isAuthReady) {
-            handleSignIn();
-        }
-    }, [isAuthReady, auth]);
-
-    // Xử lý chế độ sáng/tối
+    // Cập nhật chế độ sáng/tối khi tải trang
     useEffect(() => {
         document.body.classList.toggle('dark', themeRef.current === 'dark');
     }, []);
 
+    // Chuyển đổi giữa chế độ sáng và tối
     const toggleTheme = () => {
         const newTheme = themeRef.current === 'light' ? 'dark' : 'light';
         themeRef.current = newTheme;
@@ -79,24 +80,25 @@ const App = () => {
         document.body.classList.toggle('dark');
     };
     
-    // Hiển thị thông báo
+    // Hiển thị thông báo đến người dùng
     const showMessage = (msg, type = 'info') => {
         setMessage({ text: msg, type });
-        setTimeout(() => setMessage(''), 5000);
+        setTimeout(() => setMessage(''), 5000); // Tự động ẩn thông báo sau 5 giây
     };
 
     // Hàm gọi API của Gemini để dịch văn bản
-    const translateWithGeminiAPI = async (text) => {
+    const translateWithGeminiAPI = async (text, direction) => {
         if (!text) return '';
         let retries = 0;
         const maxRetries = 5;
         let delay = 1000;
+        
+        const promptTemplate = direction === 'edeToViet' ?
+            `Dịch văn bản sau từ tiếng Êđê sang tiếng Việt.\nĐoạn văn bản Êđê: ${text}` :
+            `Dịch văn bản sau từ tiếng Việt sang tiếng Êđê.\nĐoạn văn bản tiếng Việt: ${text}`;
 
         while (retries < maxRetries) {
             try {
-                const promptTemplate = `Dịch văn bản sau từ tiếng Êđê sang tiếng Việt.
-                \nĐoạn văn bản Êđê: ${text}`;
-                
                 const payload = {
                     contents: [{ role: "user", parts: [{ text: promptTemplate }] }]
                 };
@@ -116,36 +118,41 @@ const App = () => {
                         delay *= 2;
                         continue;
                     }
-                    throw new Error(`API Error: ${response.statusText}`);
+                    throw new Error(`Lỗi API: ${response.statusText}`);
                 }
 
                 const result = await response.json();
-                return result?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                return result?.candidates?.[0]?.content?.parts?.[0]?.text || 'Không có kết quả dịch.';
             } catch (error) {
                 console.error('Lỗi khi gọi API dịch văn bản:', error);
                 throw error;
             }
         }
-        throw new Error('Đã hết số lần thử lại API.');
+        throw new Error('Đã hết số lần thử lại API. Vui lòng thử lại sau.');
     };
 
-    // Hàm dịch văn bản chính
+    // Xử lý sự kiện dịch văn bản chính
     const handleTextTranslate = async () => {
-        if (!edeInput.trim()) {
-            setVietOutput('');
-            showMessage('Vui lòng nhập văn bản Êđê.', 'warning');
+        const inputText = translationDirection === 'edeToViet' ? edeInput : vietOutput;
+        if (!inputText.trim()) {
+            showMessage(`Vui lòng nhập văn bản ${translationDirection === 'edeToViet' ? 'tiếng Êđê' : 'tiếng Việt'}.`, 'warning');
             return;
         }
 
         setLoading(true);
         showMessage('Đang dịch văn bản...', 'info');
         try {
-            const translatedAI = await translateWithGeminiAPI(edeInput);
-            setVietOutput(translatedAI);
+            const translatedAI = await translateWithGeminiAPI(inputText, translationDirection);
+            if (translationDirection === 'edeToViet') {
+                setVietOutput(translatedAI);
+            } else {
+                setEdeInput(translatedAI);
+            }
             showMessage('Dịch văn bản hoàn tất.', 'success');
         } catch (error) {
             console.error('Lỗi trong quá trình dịch:', error);
             showMessage(`Lỗi: ${error.message}. Vui lòng thử lại.`, 'error');
+            setEdeInput('');
             setVietOutput('');
         } finally {
             setLoading(false);
@@ -160,9 +167,9 @@ const App = () => {
         }
         
         const recognition = new window.webkitSpeechRecognition();
-        recognition.continuous = true;
+        recognition.continuous = false; // Ghi âm một lần duy nhất
         recognition.interimResults = false;
-        recognition.lang = 'vi-VN'; // Sử dụng tiếng Việt làm ngôn ngữ gốc để ghi âm
+        recognition.lang = 'vi-VN'; // Luôn sử dụng tiếng Việt để ghi âm
 
         recognition.onstart = () => {
             setIsRecording(true);
@@ -170,13 +177,12 @@ const App = () => {
         };
 
         recognition.onresult = (event) => {
-            let finalTranscript = '';
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-                if (event.results[i].isFinal) {
-                    finalTranscript += event.results[i][0].transcript;
-                }
+            const transcript = event.results[event.results.length - 1][0].transcript;
+            if (translationDirection === 'edeToViet') {
+                setEdeInput(prev => prev + transcript.trim());
+            } else {
+                setVietOutput(prev => prev + transcript.trim());
             }
-            setEdeInput(prev => prev + finalTranscript.trim());
         };
 
         recognition.onerror = (event) => {
@@ -223,6 +229,15 @@ const App = () => {
             if (desiredVoice) utterance.voice = desiredVoice;
             window.speechSynthesis.speak(utterance);
         }
+    };
+    
+    // Hàm đảo chiều dịch
+    const handleSwapDirection = () => {
+        setTranslationDirection(prev => prev === 'edeToViet' ? 'vietToEde' : 'edeToViet');
+        // Hoán đổi nội dung của hai ô văn bản
+        const temp = edeInput;
+        setEdeInput(vietOutput);
+        setVietOutput(temp);
     };
 
     // --- Xử lý Dịch ảnh ---
@@ -343,11 +358,13 @@ const App = () => {
                     {/* Tab Dịch Văn Bản */}
                     {activeTab === 'text' && (
                         <>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Khung nhập liệu tiếng Êđê */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
+                                {/* Khung nhập liệu (bên trái) */}
                                 <div className="flex flex-col">
                                     <div className="flex items-center justify-between mb-2">
-                                        <label htmlFor="ede-input" className="block text-lg font-semibold">Tiếng Êđê</label>
+                                        <label htmlFor="input-text" className="block text-lg font-semibold">
+                                            {translationDirection === 'edeToViet' ? 'Tiếng Êđê' : 'Tiếng Việt'}
+                                        </label>
                                         <div className="flex items-center space-x-2">
                                             <button
                                                 onClick={isRecording ? stopRecording : startRecording}
@@ -357,38 +374,51 @@ const App = () => {
                                                 <i className="fas fa-microphone text-xl"></i>
                                             </button>
                                             <button
-                                                onClick={() => speakText(edeInput, 'vi-VN')}
+                                                onClick={() => speakText(translationDirection === 'edeToViet' ? edeInput : vietOutput, 'vi-VN')}
                                                 className="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-300"
-                                                title="Phát âm tiếng Êđê"
+                                                title="Phát âm"
                                             >
                                                 <i className="fas fa-volume-up text-xl"></i>
                                             </button>
                                         </div>
                                     </div>
                                     <textarea
-                                        id="ede-input"
-                                        value={edeInput}
-                                        onChange={(e) => setEdeInput(e.target.value)}
+                                        id="input-text"
+                                        value={translationDirection === 'edeToViet' ? edeInput : vietOutput}
+                                        onChange={(e) => translationDirection === 'edeToViet' ? setEdeInput(e.target.value) : setVietOutput(e.target.value)}
                                         className="w-full h-80 p-4 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 resize-none bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                                        placeholder="Nhập văn bản tiếng Êđê..."
+                                        placeholder={`Nhập văn bản ${translationDirection === 'edeToViet' ? 'tiếng Êđê' : 'tiếng Việt'}...`}
                                     ></textarea>
                                 </div>
                                 
-                                {/* Khung hiển thị tiếng Việt */}
+                                {/* Nút đảo chiều */}
+                                <div className="flex justify-center items-center md:absolute md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 z-10">
+                                    <button
+                                        onClick={handleSwapDirection}
+                                        className="p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300"
+                                        title="Đảo chiều dịch"
+                                    >
+                                        <i className="fas fa-exchange-alt"></i>
+                                    </button>
+                                </div>
+
+                                {/* Khung hiển thị kết quả (bên phải) */}
                                 <div className="flex flex-col">
                                     <div className="flex items-center justify-between mb-2">
-                                        <label htmlFor="viet-output" className="block text-lg font-semibold">Tiếng Việt</label>
+                                        <label htmlFor="output-text" className="block text-lg font-semibold">
+                                            {translationDirection === 'edeToViet' ? 'Tiếng Việt' : 'Tiếng Êđê'}
+                                        </label>
                                         <button
-                                            onClick={() => speakText(vietOutput, 'vi-VN')}
+                                            onClick={() => speakText(translationDirection === 'edeToViet' ? vietOutput : edeInput, 'vi-VN')}
                                             className="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-300"
-                                            title="Phát âm tiếng Việt"
+                                            title="Phát âm"
                                         >
                                             <i className="fas fa-volume-up text-xl"></i>
                                         </button>
                                     </div>
                                     <textarea
-                                        id="viet-output"
-                                        value={vietOutput}
+                                        id="output-text"
+                                        value={translationDirection === 'edeToViet' ? vietOutput : edeInput}
                                         readOnly
                                         className="w-full h-80 p-4 border border-gray-300 dark:border-gray-600 rounded-xl resize-none bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                                         placeholder="Bản dịch sẽ xuất hiện ở đây..."

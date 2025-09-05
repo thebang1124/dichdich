@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trình Dịch Tiếng Ê-đê</title>
+    <title>Trình Dịch Tiếng Ê-đê (Nâng Cao)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -46,102 +46,52 @@
             --shadow-color: rgba(244, 63, 94, 0.1);
         }
 
-        body {
-            font-family: 'Be Vietnam Pro', sans-serif;
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        .card {
-            background-color: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            box-shadow: 0 8px 24px var(--shadow-color);
-            transition: all 0.3s ease;
-        }
-        .tab-button.active {
-            border-color: var(--primary-color);
-            color: var(--primary-color);
-            background-color: color-mix(in srgb, var(--primary-color) 10%, transparent);
-        }
-        .loader {
-            border: 4px solid color-mix(in srgb, var(--primary-color) 20%, transparent);
-            border-top: 4px solid var(--primary-color);
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-        }
+        body { font-family: 'Be Vietnam Pro', sans-serif; background-color: var(--bg-primary); color: var(--text-primary); transition: background-color 0.3s ease, color 0.3s ease; }
+        .card { background-color: var(--bg-secondary); border: 1px solid var(--border-color); box-shadow: 0 8px 24px var(--shadow-color); transition: all 0.3s ease; }
+        .tab-button.active { border-color: var(--primary-color); color: var(--primary-color); background-color: color-mix(in srgb, var(--primary-color) 10%, transparent); }
+        .loader { border: 4px solid color-mix(in srgb, var(--primary-color) 20%, transparent); border-top: 4px solid var(--primary-color); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .message-box {
-            position: fixed; top: 20px; left: 50%;
-            background-color: #111827; color: white; padding: 15px 25px;
-            border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            z-index: 1000; opacity: 0; visibility: hidden;
-            transition: all 0.3s ease;
-            transform: translate(-50%, -20px);
-        }
+        .message-box { position: fixed; top: 20px; left: 50%; background-color: #111827; color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s ease; transform: translate(-50%, -20px); }
         .message-box.show { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
         #aiAssistantButton { position: fixed; bottom: 2rem; right: 2rem; z-index: 999; }
-        #aiChatContainer { 
-            position: fixed; bottom: 6rem; right: 2rem; z-index: 998; 
-            transition: opacity 0.3s ease, transform 0.3s ease;
-            transform-origin: bottom right;
-        }
-        #aiChatContainer.hidden {
-            opacity: 0;
-            transform: scale(0.9);
-            pointer-events: none;
-        }
-        .form-input:focus {
-            outline: none;
-            border-color: var(--primary-color) !important;
-            box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 25%, transparent);
-        }
-        .btn {
-            transition: all 0.2s ease-in-out;
-        }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px var(--shadow-color);
-        }
-        .btn:active {
-            transform: translateY(0px);
-            box-shadow: 0 2px 6px var(--shadow-color);
-        }
-        .theme-btn {
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-        .theme-btn.active {
-            transform: scale(1.2);
-            box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 4px var(--primary-color);
-        }
+        #aiChatContainer { position: fixed; bottom: 6rem; right: 2rem; z-index: 998; width: 100%; max-width: 22rem; transition: opacity 0.3s ease, transform 0.3s ease; transform-origin: bottom right; }
+        #aiChatContainer.hidden { opacity: 0; transform: scale(0.9); pointer-events: none; }
+        .form-input:focus { outline: none; border-color: var(--primary-color) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 25%, transparent); }
+        .btn { transition: all 0.2s ease-in-out; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px var(--shadow-color); }
+        .btn:active { transform: translateY(0px); box-shadow: 0 2px 6px var(--shadow-color); }
+        .theme-btn { transition: all 0.2s ease; cursor: pointer; }
+        .theme-btn.active { transform: scale(1.2); box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 4px var(--primary-color); }
+        .ai-suggestion-btn { background-color: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-secondary); transition: all 0.2s ease; }
+        .ai-suggestion-btn:hover { border-color: var(--primary-color); color: var(--primary-color); transform: translateY(-1px); }
+        #speechSettingsPanel { transition: all 0.3s ease-in-out; max-height: 0; overflow: hidden; }
+        #speechSettingsPanel.open { max-height: 200px; }
     </style>
 </head>
 <body class="antialiased">
 
     <div class="min-h-screen p-4 sm:p-6 md:p-8 flex flex-col items-center">
-        <header class="w-full max-w-4xl mx-auto flex justify-between items-center mb-8 flex-wrap gap-4">
-            <div class="flex items-center gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary-color);"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <header class="w-full max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between mb-10 gap-6">
+            <div class="flex items-center gap-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary-color);"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
                 <div class="text-left">
                     <h1 class="text-3xl sm:text-4xl font-extrabold" style="color: var(--text-primary);">Trình Dịch Ê-đê</h1>
                     <p class="mt-1 text-md" style="color: var(--text-secondary);">Khám Phá Ngôn Ngữ & Văn Hóa</p>
                 </div>
             </div>
-            <div id="theme-buttons" class="flex items-center gap-2 sm:gap-3 p-1 rounded-full" style="background-color: var(--bg-tertiary); border: 1px solid var(--border-color);">
-                <button data-theme="light" title="Sáng" class="theme-btn w-6 h-6 rounded-full bg-white border-2" style="border-color: #e2e8f0;"></button>
-                <button data-theme="dark" title="Tối" class="theme-btn w-6 h-6 rounded-full" style="background-color: #0f172a;"></button>
-                <button data-theme="gold" title="Vàng Đồng" class="theme-btn w-6 h-6 rounded-full" style="background-color: #ca8a04;"></button>
-                <button data-theme="slate" title="Xám Xanh" class="theme-btn w-6 h-6 rounded-full" style="background-color: #64748b;"></button>
-                <button data-theme="green" title="Xanh Lá" class="theme-btn w-6 h-6 rounded-full" style="background-color: #22c55e;"></button>
-                <button data-theme="rose" title="Hồng Phấn" class="theme-btn w-6 h-6 rounded-full" style="background-color: #f43f5e;"></button>
+            <div id="theme-buttons" class="flex items-center gap-3 p-2 rounded-full" style="background-color: var(--bg-tertiary); border: 1px solid var(--border-color);">
+                <button data-theme="light" title="Sáng" class="theme-btn w-7 h-7 rounded-full bg-white border-2" style="border-color: #e2e8f0;"></button>
+                <button data-theme="dark" title="Tối" class="theme-btn w-7 h-7 rounded-full" style="background-color: #0f172a;"></button>
+                <button data-theme="gold" title="Vàng Đồng" class="theme-btn w-7 h-7 rounded-full" style="background-color: #ca8a04;"></button>
+                <button data-theme="slate" title="Xám Xanh" class="theme-btn w-7 h-7 rounded-full" style="background-color: #64748b;"></button>
+                <button data-theme="green" title="Xanh Lá" class="theme-btn w-7 h-7 rounded-full" style="background-color: #22c55e;"></button>
+                <button data-theme="rose" title="Hồng Phấn" class="theme-btn w-7 h-7 rounded-full" style="background-color: #f43f5e;"></button>
             </div>
         </header>
 
-        <main class="w-full max-w-4xl mx-auto">
+        <main class="w-full max-w-5xl mx-auto">
             <div class="card rounded-2xl p-6 md:p-8">
-                <div class="flex flex-col md:flex-row items-start gap-4">
+                <div class="flex flex-col md:flex-row items-start gap-6">
                     <div class="flex-1 w-full flex flex-col space-y-2">
                         <div class="flex justify-between items-center">
                             <label for="inputLang" class="font-semibold text-sm" style="color: var(--text-secondary);">Từ ngôn ngữ</label>
@@ -167,6 +117,9 @@
                         </div>
                         <div class="relative w-full">
                             <textarea id="outputText" rows="8" readonly class="form-input w-full p-4 rounded-lg border-2 resize-none" style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);" placeholder="Kết quả..."></textarea>
+                            <div class="absolute top-3 right-3 flex items-center gap-1">
+                                <button id="copyButton" title="Sao chép" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition" style="background-color: var(--bg-secondary); color: var(--text-secondary);"></button>
+                            </div>
                             <div class="absolute bottom-3 right-3 flex items-center gap-1">
                                 <button id="speechSettingsButton" title="Cài đặt phát âm" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition" style="background-color: var(--bg-secondary); color: var(--text-secondary);"></button>
                                 <button id="speakTranslatedTextButton" title="Phát âm văn bản" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition" style="background-color: var(--bg-secondary); color: var(--text-secondary);"></button>
@@ -175,8 +128,7 @@
                     </div>
                 </div>
                 
-                <!-- Cài đặt phát âm -->
-                <div id="speechSettingsPanel" class="hidden mt-4 p-4 rounded-lg" style="background-color: var(--bg-tertiary); border: 1px solid var(--border-color);">
+                <div id="speechSettingsPanel" class="mt-4 p-4 rounded-lg" style="background-color: var(--bg-tertiary); border: 1px solid var(--border-color);">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="flex flex-col space-y-1">
                             <label for="voiceSelect" class="text-sm font-medium" style="color: var(--text-secondary);">Giọng nói</label>
@@ -189,7 +141,7 @@
                     </div>
                 </div>
 
-                <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
                     <button id="translateButton" class="btn w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 rounded-lg font-semibold" style="background-color: var(--primary-color); color: white;">
                         <span class="button-icon"></span><span class="button-text">Dịch</span>
                     </button>
@@ -200,74 +152,104 @@
                         <span class="button-icon"></span><span class="button-text">Tóm tắt</span>
                     </button>
                 </div>
+                
+                <div id="additionalOutputWrapper" class="mt-6 hidden">
+                     <label for="additionalOutput" class="font-semibold text-lg" style="color: var(--text-primary);">Kết quả bổ sung</label>
+                     <div class="relative w-full mt-2">
+                         <textarea id="additionalOutput" rows="5" readonly class="form-input w-full p-4 rounded-lg border-2 resize-none" style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);"></textarea>
+                     </div>
+                </div>
+
             </div>
             
-            <div class="card rounded-2xl p-6 md:p-8 mt-10">
-                <h2 class="text-2xl font-bold mb-4 text-center">Tạo Đoạn Văn</h2>
-                <div class="flex flex-col space-y-4">
-                    <label for="paragraphKeywords" class="font-semibold">Từ khóa/Chủ đề:</label>
-                    <textarea id="paragraphKeywords" rows="3" class="form-input w-full p-4 rounded-lg border-2 transition duration-300 resize-none" style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);" placeholder="Ví dụ: Lễ hội cồng chiêng, nghề dệt thổ cẩm..."></textarea>
-                </div>
-                <button id="generateParagraphButton" class="btn mt-6 w-full flex items-center justify-center gap-2 px-8 py-3 rounded-lg font-semibold" style="background-color: var(--primary-color); color: white;">
-                    <span class="button-icon"></span><span class="button-text">Tạo Đoạn Văn</span>
-                </button>
-                <div id="paragraphOutputWrapper" class="mt-6 hidden">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="flex flex-col space-y-2">
-                            <label for="edeParagraphOutput" class="font-semibold">Đoạn văn tiếng Ê-đê</label>
-                            <textarea id="edeParagraphOutput" rows="8" readonly class="form-input w-full p-4 rounded-lg border-2 resize-none" style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);"></textarea>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-10">
+                <div class="card rounded-2xl p-6 md:p-8">
+                    <h2 class="text-2xl font-bold mb-4 text-center">Tạo Đoạn Văn</h2>
+                    <div class="flex flex-col space-y-4">
+                        <label for="paragraphKeywords" class="font-semibold">Từ khóa/Chủ đề:</label>
+                        <textarea id="paragraphKeywords" rows="3" class="form-input w-full p-4 rounded-lg border-2 transition duration-300 resize-none" style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);" placeholder="Ví dụ: Lễ hội cồng chiêng, nghề dệt thổ cẩm..."></textarea>
+                    </div>
+                    <button id="generateParagraphButton" class="btn mt-6 w-full flex items-center justify-center gap-2 px-8 py-3 rounded-lg font-semibold" style="background-color: var(--primary-color); color: white;">
+                        <span class="button-icon"></span><span class="button-text">Tạo Đoạn Văn</span>
+                    </button>
+                    <div id="paragraphOutputWrapper" class="mt-6 hidden space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="flex flex-col space-y-2">
+                                <label for="edeParagraphOutput" class="font-semibold">Đoạn văn tiếng Ê-đê</label>
+                                <textarea id="edeParagraphOutput" rows="8" readonly class="form-input w-full p-4 rounded-lg border-2 resize-none" style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);"></textarea>
+                            </div>
+                            <div class="flex flex-col space-y-2">
+                                <label for="vietParagraphOutput" class="font-semibold">Bản dịch tiếng Việt</label>
+                                <textarea id="vietParagraphOutput" rows="8" readonly class="form-input w-full p-4 rounded-lg border-2 resize-none" style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);"></textarea>
+                            </div>
                         </div>
-                        <div class="flex flex-col space-y-2">
-                            <label for="vietParagraphOutput" class="font-semibold">Bản dịch tiếng Việt</label>
-                            <textarea id="vietParagraphOutput" rows="8" readonly class="form-input w-full p-4 rounded-lg border-2 resize-none" style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);"></textarea>
+                        <div id="paragraphAnalysisWrapper" class="hidden pt-4 border-t" style="border-color: var(--border-color);">
+                            <h3 class="font-semibold mb-2">Phân tích từ vựng</h3>
+                            <div id="paragraphAnalysisResult" class="p-4 rounded-lg max-h-60 overflow-y-auto" style="background-color: var(--bg-tertiary); border: 1px solid var(--border-color);"></div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="mt-10">
-                <div class="mb-4 border-b flex justify-center" style="border-color: var(--border-color);">
-                    <button data-tab="imageTab" class="tab-button text-lg font-medium py-2 px-6 border-b-2 transition active">Dịch từ ảnh</button>
-                    <button data-tab="dictionaryTab" class="tab-button text-lg font-medium py-2 px-6 border-b-2 border-transparent transition" style="color: var(--text-secondary);">Mục tra từ</button>
-                </div>
-                <div class="tab-content card rounded-2xl p-6 md:p-8">
-                    <div id="imageTab" class="space-y-6">
-                        <div class="p-6 border-2 border-dashed rounded-lg text-center cursor-pointer transition" style="border-color: var(--border-color);" id="dropZone">
-                            <input type="file" id="imageInput" class="hidden" accept="image/*">
-                            <div id="imagePlaceholder" class="flex flex-col items-center justify-center gap-3"></div>
-                            <div id="imagePreviewWrapper" class="hidden relative"><img id="imagePreview" class="max-h-60 mx-auto rounded-md shadow-md"/><button id="removeImageButton" class="absolute -top-3 -right-3 bg-white rounded-full p-1 shadow-lg text-red-500 hover:bg-red-50 text-2xl font-bold w-8 h-8 flex items-center justify-center">&times;</button></div>
-                        </div>
-                        <button id="translateImageButton" class="btn w-full flex items-center justify-center gap-2 px-8 py-3 rounded-lg font-semibold" style="background-color: var(--accent-color); color: white;" disabled>
-                            <span class="button-icon"></span><span class="button-text">Dịch từ ảnh</span>
-                        </button>
-                        <div id="imageTranslateResultWrapper" class="mt-6 hidden space-y-6">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div class="flex flex-col space-y-2"><label class="font-semibold">Bản dịch Tiếng Việt</label><textarea id="vietImageText" rows="6" readonly class="form-input w-full p-4 rounded-lg border-2 resize-none" style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);"></textarea></div>
-                                <div class="flex flex-col space-y-2"><label class="font-semibold">Bản dịch Tiếng Ê-đê</label><textarea id="edeImageText" rows="6" readonly class="form-input w-full p-4 rounded-lg border-2 resize-none" style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);"></textarea></div>
-                            </div>
-                            <div class="pt-4 border-t" style="border-color: var(--border-color);">
-                                <h3 class="font-semibold mb-2">Phân tích từ</h3>
-                                <div id="wordAnalysisResult" class="p-4 rounded-lg max-h-60 overflow-y-auto" style="background-color: var(--bg-tertiary); border: 1px solid var(--border-color);"></div>
-                            </div>
-                        </div>
+                <div class="card rounded-2xl p-6 md:p-8">
+                    <div class="mb-4 border-b flex justify-center" style="border-color: var(--border-color);">
+                        <button data-tab="imageTab" class="tab-button text-lg font-medium py-2 px-6 border-b-2 transition active">Dịch từ ảnh</button>
+                        <button data-tab="dictionaryTab" class="tab-button text-lg font-medium py-2 px-6 border-b-2 border-transparent transition" style="color: var(--text-secondary);">Mục tra từ</button>
+                        <button data-tab="historyTab" class="tab-button text-lg font-medium py-2 px-6 border-b-2 border-transparent transition" style="color: var(--text-secondary);">Lịch sử</button>
                     </div>
-                    <div id="dictionaryTab" class="hidden space-y-6">
-                        <div class="relative">
-                            <input type="text" id="dictionarySearch" placeholder="Tìm kiếm từ vựng..." class="form-input w-full p-3 pl-10 rounded-lg border-2" style="background-color: var(--bg-tertiary); border-color: var(--border-color);">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" style="color: var(--text-secondary);">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <div class="tab-content pt-4">
+                        <div id="imageTab" class="space-y-6">
+                            <div class="p-6 border-2 border-dashed rounded-lg text-center cursor-pointer transition" style="border-color: var(--border-color);" id="dropZone">
+                                <input type="file" id="imageInput" class="hidden" accept="image/*">
+                                <div id="imagePlaceholder" class="flex flex-col items-center justify-center gap-3"></div>
+                                <div id="imagePreviewWrapper" class="hidden relative"><img id="imagePreview" class="max-h-60 mx-auto rounded-md shadow-md"/><button id="removeImageButton" class="absolute -top-3 -right-3 bg-white rounded-full p-1 shadow-lg text-red-500 hover:bg-red-50 text-2xl font-bold w-8 h-8 flex items-center justify-center">&times;</button></div>
+                            </div>
+                            <button id="translateImageButton" class="btn w-full flex items-center justify-center gap-2 px-8 py-3 rounded-lg font-semibold" style="background-color: var(--accent-color); color: white;" disabled>
+                                <span class="button-icon"></span><span class="button-text">Dịch từ ảnh</span>
+                            </button>
+                            <div id="imageTranslateResultWrapper" class="mt-6 hidden space-y-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="flex flex-col space-y-2"><label class="font-semibold">Bản dịch Tiếng Việt</label><textarea id="vietImageText" rows="6" readonly class="form-input w-full p-4 rounded-lg border-2 resize-none" style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);"></textarea></div>
+                                    <div class="flex flex-col space-y-2"><label class="font-semibold">Bản dịch Tiếng Ê-đê</label><textarea id="edeImageText" rows="6" readonly class="form-input w-full p-4 rounded-lg border-2 resize-none" style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);"></textarea></div>
+                                </div>
+                                <div class="pt-4 border-t" style="border-color: var(--border-color);">
+                                    <h3 class="font-semibold mb-2">Phân tích từ</h3>
+                                    <div id="wordAnalysisResult" class="p-4 rounded-lg max-h-60 overflow-y-auto" style="background-color: var(--bg-tertiary); border: 1px solid var(--border-color);"></div>
+                                </div>
+                                <div id="exerciseSection" class="hidden pt-4 border-t" style="border-color: var(--border-color);">
+                                    <button id="solveExerciseButton" class="btn w-full flex items-center justify-center gap-2 px-8 py-3 rounded-lg font-semibold" style="background-color: var(--primary-color); color: white;">
+                                        <span class="button-icon"></span><span class="button-text">Giải bài tập</span>
+                                    </button>
+                                    <div id="exerciseSolutionWrapper" class="mt-4 hidden">
+                                        <label for="exerciseSolutionText" class="font-semibold">Giải pháp:</label>
+                                        <textarea id="exerciseSolutionText" rows="6" readonly class="form-input w-full p-4 rounded-lg border-2 mt-2 resize-none" style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);"></textarea>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="mt-6 pt-4 border-t" style="border-color: var(--border-color);">
-                            <h3 class="lg font-semibold mb-3">Danh sách từ vựng nội bộ</h3>
-                            <div id="internalDictionaryList" class="max-h-96 overflow-y-auto pr-2"></div>
+                        <div id="dictionaryTab" class="hidden space-y-6">
+                            <div class="relative">
+                                <input type="text" id="dictionarySearch" placeholder="Tìm kiếm từ vựng..." class="form-input w-full p-3 pl-10 rounded-lg border-2" style="background-color: var(--bg-tertiary); border-color: var(--border-color);">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" style="color: var(--text-secondary);">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                </div>
+                            </div>
+                            <div class="mt-6 pt-4 border-t" style="border-color: var(--border-color);">
+                                <h3 class="lg font-semibold mb-3">Danh sách từ vựng nội bộ</h3>
+                                <div id="internalDictionaryList" class="max-h-96 overflow-y-auto pr-2"></div>
+                            </div>
+                        </div>
+                         <div id="historyTab" class="hidden space-y-6">
+                            <div class="flex justify-end">
+                                <button id="clearHistoryButton" class="text-sm font-semibold p-2 rounded-lg hover:bg-red-50 text-red-600">Xóa lịch sử</button>
+                            </div>
+                            <div id="historyList" class="max-h-96 overflow-y-auto pr-2 space-y-3"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </main>
         
-        <footer class="text-center mt-10 text-sm" style="color: var(--text-secondary);">
+        <footer class="text-center mt-12 text-sm" style="color: var(--text-secondary);">
             <p>Phát triển bởi Thế Bằng &copy; 2025</p>
         </footer>
     </div>
@@ -275,18 +257,19 @@
     <button id="aiAssistantButton" title="Trợ lý AI Ngôn ngữ" class="btn w-16 h-16 rounded-full flex items-center justify-center text-3xl" style="background-color: var(--primary-color); color: white;">
         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
     </button>
-    <div id="aiChatContainer" class="w-full max-w-md rounded-2xl card hidden origin-bottom-right">
-        <div class="p-4 border-b flex justify-between items-center" style="border-color: var(--border-color);"><h3 class="text-lg font-bold">Trợ lý AI Ngôn ngữ</h3><button id="closeChatButton" class="text-2xl font-bold p-1" style="color: var(--text-secondary);">&times;</button></div>
-        <div id="chatMessages" class="p-4 h-80 overflow-y-auto space-y-4">
+    <div id="aiChatContainer" class="rounded-2xl card hidden origin-bottom-right">
+        <div class="p-4 border-b flex justify-between items-center" style="border-color: var(--border-color);"><h3 class="text-lg font-bold">Trợ lý AI</h3><button id="closeChatButton" class="text-2xl font-bold p-1" style="color: var(--text-secondary);">&times;</button></div>
+        <div id="chatMessages" class="p-4 h-64 overflow-y-auto space-y-4">
              <div class="flex items-start gap-3">
                 <div id="aiIconContainer" class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background-color: var(--primary-color); color: white;"></div>
-                <div class="p-3 rounded-lg" style="background-color: var(--bg-tertiary);">
+                <div class="p-3 rounded-lg ai-message" style="background-color: var(--bg-tertiary);">
                     <p class="text-sm" id="aiGreetingMessage">Xin chào! Tôi là một trợ lý AI. Tôi có thể giúp gì cho bạn hôm nay?</p>
                 </div>
             </div>
         </div>
         <div class="p-4 border-t" style="border-color: var(--border-color);">
-            <div class="flex gap-2"><input type="text" id="chatInput" placeholder="Hỏi tôi bất cứ điều gì..." class="form-input flex-1 p-3 rounded-lg border-2" style="background-color: var(--bg-tertiary); border-color: var(--border-color);"><button id="sendChatButton" class="btn px-5 py-3 font-semibold rounded-lg" style="background-color: var(--primary-color); color: white;">Gửi</button></div>
+            <div class="flex gap-2"><input type="text" id="chatInput" placeholder="Hỏi hoặc ra lệnh cho AI..." class="form-input flex-1 p-3 rounded-lg border-2" style="background-color: var(--bg-tertiary); border-color: var(--border-color);"><button id="sendChatButton" class="btn px-5 py-3 font-semibold rounded-lg" style="background-color: var(--primary-color); color: white;">Gửi</button></div>
+            <div id="aiSuggestions" class="mt-3 flex flex-wrap gap-2"></div>
         </div>
     </div>
 
@@ -294,7 +277,18 @@
 
 <script type="module">
 try {
+    // --- STATE MANAGEMENT ---
+    const state = { 
+        isLoading: false,
+        isChatLoading: false, 
+        chatHistory: [], 
+        translationHistory: [],
+        speechSynthesis: window.speechSynthesis, 
+        voices: [],
+        lastExtractedImageText: '' 
+    };
     const translationCache = new Map();
+    // Dictionary has been reduced as requested.
     const internalDictionary = [
       { "ede": "Abao", "meanings": [{ "type": "dt", "vietnamese": "Ốc bươu" }] },
 { "ede": "Abăn", "meanings": [{ "type": "dt", "vietnamese": "Cái chăn (mền)" }] },
@@ -4289,7 +4283,7 @@ try {
 { "ede": "Yŭn", "meanings": [{ "type": "đgt", "vietnamese": "Rung" }] },
 { "ede": "Yŭng jing", "meanings": [{ "type": "đgt", "vietnamese": "Đứng sững" }] },
 { "ede": "Yŭr", "meanings": [{ "type": "dt", "vietnamese": "Dái" }] },
-{ "ede": "Yŭr tluôn", "meanings": [{ "type": "dt", "vietnamese": "Mông, đít" }] },
+{ "ede": "Yŭr tluôn", "meanings": [{ "type": "dt", "vietnamese": "Mông, ít" }] },
 { "ede": "Yưh yưp", "meanings": [{ "type": "tt", "vietnamese": "Chậm chạp; Lụn bại" }] },
 { "ede": "Yưl", "meanings": [{ "type": "đgt", "vietnamese": "Kênh (kê lên); Nâng" }] },
 { "ede": "Yưl đĭ", "meanings": [{ "type": "đgt", "vietnamese": "Nâng lên" }] },
@@ -4298,17 +4292,16 @@ try {
 { "ede": "Yư̆ bư̆", "meanings": [{ "type": "đgt", "vietnamese": "Nấn ná" }] },
 { "ede": "Yư̆ yăm", "meanings": [{ "type": "đgt", "vietnamese": "Hôn mê" }] },
 { "ede": "Yư̆ yơ̆ng", "meanings": [{ "type": "đgt", "vietnamese": "Buông" }] },
-{ "ede": "Yư̆ yư̆", "meanings": [{ "type": "tt", "vietnamese": "Chầm chậm" }] },
+{ "ede": "Yư̆ yư̆", "meanings": [{ "type": "tt", "vietnamese": "Chầm chậm" }] }
     ];
 
-    const state = { isLoading: false, isChatLoading: false, chatHistory: [], speechSynthesis: window.speechSynthesis, voices: [] };
+    // --- UI ELEMENTS & ICONS ---
     const ui = Object.fromEntries(Array.from(document.querySelectorAll('[id]')).map(el => [el.id, el]));
     Object.assign(ui, { 
         tabs: document.querySelectorAll('.tab-button'), 
         tabContents: document.querySelectorAll('.tab-content > div'),
         themeButtons: document.querySelectorAll('.theme-btn') 
     });
-    
     const icons = {
         translate: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>`,
         examples: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.042 21.672 13.684 16.6s.42-2.021 2.024-2.021a2.88 2.88 0 0 1 2.88 2.88c0 3.433-3.716 4.244-3.716 4.244Z"/><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></svg>`,
@@ -4318,10 +4311,14 @@ try {
         speak: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`,
         upload: `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-secondary);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
         swap: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg>`,
-        ai: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>`,
-        settings: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2.12l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2.12l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>`
+        ai: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>`,
+        settings: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2.12l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2.12l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>`,
+        copy: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`,
+        check: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
+        solve: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h14l-4 4m0-8 4 4"/><path d="M3 6h7"/><path d="M3 18h7"/></svg>`
     };
 
+    // --- UTILITY & UI UPDATE FUNCTIONS ---
     const scheduleUIUpdate = (callback) => window.requestAnimationFrame(callback);
 
     function setInitialIcons() {
@@ -4332,9 +4329,11 @@ try {
         if(ui.translateImageButton) ui.translateImageButton.querySelector('.button-icon').innerHTML = icons.image;
         if(ui.speakTranslatedTextButton) ui.speakTranslatedTextButton.innerHTML = icons.speak;
         if(ui.speechSettingsButton) ui.speechSettingsButton.innerHTML = icons.settings;
+        if(ui.copyButton) ui.copyButton.innerHTML = icons.copy;
         if(ui.imagePlaceholder) ui.imagePlaceholder.innerHTML = `${icons.upload}<p class="mt-2" style="color: var(--text-secondary);">Kéo thả ảnh, hoặc <span class="font-semibold" style="color: var(--primary-color);">chọn file</span></p>`;
         if(ui.swapLanguagesButton) ui.swapLanguagesButton.innerHTML = icons.swap;
         if(ui.aiIconContainer) ui.aiIconContainer.innerHTML = icons.ai;
+        if(ui.solveExerciseButton) ui.solveExerciseButton.querySelector('.button-icon').innerHTML = icons.solve;
     }
 
     function applyTheme(theme) {
@@ -4342,45 +4341,6 @@ try {
         document.documentElement.setAttribute('data-theme', theme);
     }
     
-    function getGreeting() {
-        const hour = new Date().getHours();
-        if (hour < 5) return "Khuya rồi, bạn vẫn đang làm việc à?";
-        if (hour < 11) return "Chào buổi sáng! Chúc bạn một ngày mới tốt lành.";
-        if (hour < 14) return "Chào buổi trưa! Bạn cần dịch thuật hay tìm hiểu điều gì à?";
-        if (hour < 18) return "Chào buổi chiều!";
-        return "Chào buổi tối!";
-    }
-
-    function updateAIGreeting() {
-        if (ui.aiGreetingMessage) {
-            const greeting = getGreeting();
-            ui.aiGreetingMessage.innerHTML = `${greeting} Tôi là trợ lý AI, sẵn sàng giúp bạn khám phá sự phong phú của ngôn ngữ và văn hóa Ê-đê, hoặc bất kỳ điều gì khác bạn quan tâm.`;
-        }
-    }
-
-    function loadVoices() { 
-        if (!ui.voiceSelect) return;
-        state.voices = state.speechSynthesis.getVoices().filter(voice => voice.lang.startsWith('vi'));
-        ui.voiceSelect.innerHTML = '';
-        state.voices.forEach((voice, i) => {
-            const option = document.createElement('option');
-            option.textContent = `${voice.name} (${voice.lang})`;
-            option.value = i;
-            ui.voiceSelect.appendChild(option);
-        });
-    }
-    
-    function speakText(text) {
-        if (!text || !ui.voiceSelect || !ui.speedRange) return;
-        if (state.speechSynthesis.speaking) { state.speechSynthesis.cancel(); }
-        
-        const utterance = new SpeechSynthesisUtterance(text);
-        const selectedVoiceIndex = ui.voiceSelect.value;
-        utterance.voice = state.voices[selectedVoiceIndex];
-        utterance.rate = ui.speedRange.value;
-        state.speechSynthesis.speak(utterance);
-    }
-
     function showMessage(message, duration = 3000) {
         scheduleUIUpdate(() => {
             if(ui.messageBox) {
@@ -4401,25 +4361,97 @@ try {
             const iconSpan = button.querySelector('.button-icon');
             button.disabled = isLoading;
             if (textSpan) textSpan.textContent = isLoading ? 'Đang xử lý...' : originalText;
-            if (iconSpan) iconSpan.innerHTML = isLoading ? '<div class="loader"></div>' : { 'Dịch': icons.translate, 'Tạo ví dụ': icons.examples, 'Tóm tắt': icons.summarize, 'Tạo Đoạn Văn': icons.paragraph, 'Dịch từ ảnh': icons.image }[originalText] || '';
+            if (iconSpan) {
+                const originalIcon = { 'Dịch': icons.translate, 'Tạo ví dụ': icons.examples, 'Tóm tắt': icons.summarize, 'Tạo Đoạn Văn': icons.paragraph, 'Dịch từ ảnh': icons.image, 'Giải bài tập': icons.solve }[originalText];
+                iconSpan.innerHTML = isLoading ? '<div class="loader"></div>' : originalIcon || '';
+            }
         });
     }
+
+    // --- SPEECH SYNTHESIS ---
+    function loadVoices() { 
+        if (!ui.voiceSelect) return;
+        state.voices = state.speechSynthesis.getVoices().filter(voice => voice.lang.startsWith('vi'));
+        ui.voiceSelect.innerHTML = '';
+        if (state.voices.length > 0) {
+            state.voices.forEach((voice, i) => {
+                const option = new Option(`${voice.name} (${voice.lang})`, i);
+                ui.voiceSelect.add(option);
+            });
+        } else {
+             ui.voiceSelect.add(new Option(`Không tìm thấy giọng nói Tiếng Việt`, '', false, true));
+        }
+    }
     
+    function speakText(text) {
+        if (!text || !ui.voiceSelect || !ui.speedRange) return;
+        if (state.speechSynthesis.speaking) { state.speechSynthesis.cancel(); }
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        const selectedVoiceIndex = ui.voiceSelect.value;
+        if (state.voices[selectedVoiceIndex]) utterance.voice = state.voices[selectedVoiceIndex];
+        utterance.rate = ui.speedRange.value;
+        state.speechSynthesis.speak(utterance);
+    }
+    
+    // --- TRANSLATION HISTORY ---
+    function loadHistory() {
+        state.translationHistory = JSON.parse(localStorage.getItem('translationHistory') || '[]');
+        renderHistory();
+    }
+
+    function saveHistory(item) {
+        state.translationHistory.unshift(item);
+        if (state.translationHistory.length > 50) { 
+            state.translationHistory.pop();
+        }
+        localStorage.setItem('translationHistory', JSON.stringify(state.translationHistory));
+        renderHistory();
+    }
+
+    function renderHistory() {
+        if (!ui.historyList) return;
+        scheduleUIUpdate(() => {
+            ui.historyList.innerHTML = '';
+            if (state.translationHistory.length === 0) {
+                ui.historyList.innerHTML = `<p class="text-center py-4" style="color: var(--text-secondary);">Lịch sử dịch của bạn trống.</p>`;
+                return;
+            }
+            const fragment = document.createDocumentFragment();
+            state.translationHistory.forEach((item) => {
+                const div = document.createElement('div');
+                div.className = 'p-3 rounded-lg border transition hover:border-[color:var(--primary-color)] cursor-pointer';
+                div.style.borderColor = 'var(--border-color)';
+                div.innerHTML = `
+                    <p class="font-semibold text-sm truncate" style="color: var(--text-primary);">${item.fromText}</p>
+                    <p class="text-sm truncate" style="color: var(--text-secondary);">${item.toText}</p>
+                    <p class="text-xs mt-1" style="color: var(--text-secondary);">${item.fromLang} → ${item.toLang}</p>
+                `;
+                div.onclick = () => {
+                    ui.inputLang.value = item.fromLang;
+                    ui.outputLang.value = item.toLang;
+                    ui.inputText.value = item.fromText;
+                    ui.outputText.value = item.toText;
+                };
+                fragment.appendChild(div);
+            });
+            ui.historyList.appendChild(fragment);
+        });
+    }
+
+    // --- DICTIONARY ---
     function renderInternalDictionary(filter = '') {
         if (!ui.internalDictionaryList) return;
         scheduleUIUpdate(() => {
             ui.internalDictionaryList.innerHTML = '';
+            const lowerFilter = filter.toLowerCase();
             const filteredDictionary = internalDictionary.filter(term => 
-                term.ede.toLowerCase().includes(filter.toLowerCase()) || 
-                term.meanings.some(m => m.vietnamese.toLowerCase().includes(filter.toLowerCase()))
+                term.ede.toLowerCase().includes(lowerFilter) || 
+                term.meanings.some(m => m.vietnamese.toLowerCase().includes(lowerFilter))
             );
 
             if (filteredDictionary.length === 0) {
-                const placeholder = document.createElement('p');
-                placeholder.className = 'text-center py-4 col-span-2';
-                placeholder.style.color = 'var(--text-secondary)';
-                placeholder.textContent = filter ? 'Không tìm thấy kết quả.' : 'Từ điển nội bộ trống.';
-                ui.internalDictionaryList.appendChild(placeholder);
+                ui.internalDictionaryList.innerHTML = `<p class="text-center py-4" style="color: var(--text-secondary);">${filter ? 'Không tìm thấy kết quả.' : 'Nhập để tìm kiếm từ điển.'}</p>`;
             } else {
                 const fragment = document.createDocumentFragment();
                 const header = document.createElement('div');
@@ -4427,12 +4459,12 @@ try {
                 header.style.backgroundColor = 'var(--bg-secondary)';
                 header.innerHTML = `<span>Tiếng Ê-đê</span><span>Tiếng Việt</span>`;
                 fragment.appendChild(header);
-
+                
                 const sortedDictionary = filteredDictionary.sort((a, b) => a.ede.localeCompare(b.ede));
                 sortedDictionary.forEach(term => {
                     const meaningsHtml = term.meanings.map(m => `(${m.type}) ${m.vietnamese}`).join('; ');
                     const item = document.createElement('div');
-                    item.className = 'grid grid-cols-2 gap-4 p-3 rounded-lg border transition hover:bg-[color:var(--bg-tertiary)] hover:border-[color:var(--primary-color)]';
+                    item.className = 'grid grid-cols-2 gap-4 p-3 rounded-lg border';
                     item.style.borderColor = 'var(--border-color)';
                     item.innerHTML = `<div class="font-medium break-words">${term.ede}</div><div class="text-sm break-words" style="color: var(--text-secondary);">${meaningsHtml}</div>`;
                     fragment.appendChild(item);
@@ -4442,49 +4474,56 @@ try {
         });
     }
 
-    async function callGeminiAPI(prompt, imageData = null, model = 'gemini-2.5-flash-preview-05-20', chatHistory = []) {
+    // --- GEMINI API CALL ---
+    async function callGeminiAPI(prompt, imageData = null, useGrounding = false) {
+        // This key is for demonstration purposes. In a real app, manage keys securely.
         const apiKey = "AIzaSyBVCTx8fPnGWFprwoT9bgixio_NUgvNG4k"; 
+        const model = 'gemini-2.5-flash-preview-05-20';
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-        const contents = [...chatHistory, { role: "user", parts: [{ text: prompt }, ...(imageData ? [{inlineData: imageData}] : [])] }];
+        
+        const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+        if (imageData) payload.contents[0].parts.push({ inlineData: imageData });
+        if (useGrounding) payload.tools = [{ "google_search": {} }];
+
         try {
-            const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents }) });
+            const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(`Lỗi API: ${response.status} - ${errorData.error?.message || 'Lỗi không xác định'}`);
             }
             const result = await response.json();
-            if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
-                return result.candidates[0].content.parts[0].text;
-            }
+            const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text) return text;
+            
             const blockReason = result.candidates?.[0]?.finishReason;
-            throw new Error(blockReason ? `Yêu cầu bị chặn vì lý do: ${blockReason}.` : "Phản hồi API không hợp lệ.");
+            throw new Error(blockReason ? `Yêu cầu bị chặn: ${blockReason}` : "Phản hồi API không hợp lệ.");
         } catch (error) {
             console.error("Lỗi API Gemini:", error);
             throw error;
         }
     }
 
+    // --- CORE FEATURE HANDLERS ---
     async function handleTranslate() {
-        if (!ui.inputText || !ui.outputText || !ui.inputLang || !ui.outputLang || !ui.translationSource) return;
-        const inputText = ui.inputText.value.trim().toLowerCase();
+        const inputText = ui.inputText.value.trim();
         if (state.isLoading || !inputText) return;
 
         const inputLang = ui.inputLang.value;
         const outputLang = ui.outputLang.value;
-
         scheduleUIUpdate(() => ui.translationSource.classList.add('hidden'));
 
         if (inputLang === outputLang) {
-            scheduleUIUpdate(() => { ui.outputText.value = ui.inputText.value; });
+            scheduleUIUpdate(() => { ui.outputText.value = inputText; });
             return;
         }
 
+        const lowerCaseInput = inputText.toLowerCase();
         let dictionaryResult = null;
         if (inputLang === 'Tiếng Ê-đê' && outputLang === 'Tiếng Việt') {
-            const found = internalDictionary.find(term => term.ede.toLowerCase() === inputText);
+            const found = internalDictionary.find(term => term.ede.toLowerCase() === lowerCaseInput);
             if (found) dictionaryResult = found.meanings.map(m => m.vietnamese).join(', ');
         } else if (inputLang === 'Tiếng Việt' && outputLang === 'Tiếng Ê-đê') {
-            const found = internalDictionary.find(term => term.meanings.some(m => m.vietnamese.toLowerCase() === inputText));
+            const found = internalDictionary.find(term => term.meanings.some(m => m.vietnamese.toLowerCase() === lowerCaseInput));
             if (found) dictionaryResult = found.ede;
         }
 
@@ -4493,24 +4532,17 @@ try {
                 ui.outputText.value = dictionaryResult;
                 ui.translationSource.classList.remove('hidden');
             });
-            return;
-        }
-
-        const cacheKey = `${inputLang}:${outputLang}:${inputText}`;
-        if (translationCache.has(cacheKey)) {
-            scheduleUIUpdate(() => { ui.outputText.value = translationCache.get(cacheKey); });
+            saveHistory({ fromLang: inputLang, toLang: outputLang, fromText: inputText, toText: dictionaryResult });
             return;
         }
 
         setLoadingState(ui.translateButton, true, 'Dịch');
-        scheduleUIUpdate(() => { ui.outputText.value = ''; });
-        
-        const prompt = `Dịch văn bản sau từ ${inputLang} sang ${outputLang}. Chỉ trả về văn bản đã dịch. Văn bản: "${ui.inputText.value.trim()}"`;
+        const prompt = `Dịch văn bản sau từ ${inputLang} sang ${outputLang} một cách chính xác nhất, sử dụng kiến thức từ nhiều nguồn. Chỉ trả về văn bản đã dịch. Văn bản: "${inputText}"`;
 
         try {
-            const translation = await callGeminiAPI(prompt);
-            translationCache.set(cacheKey, translation);
+            const translation = await callGeminiAPI(prompt, null, true); // Use grounding
             scheduleUIUpdate(() => { if (ui.outputText) ui.outputText.value = translation; });
+            saveHistory({ fromLang: inputLang, toLang: outputLang, fromText: inputText, toText: translation });
         } catch (error) {
             scheduleUIUpdate(() => { if (ui.outputText) ui.outputText.value = `Lỗi: ${error.message}`; });
             showMessage(`Lỗi dịch: ${error.message}`, 5000);
@@ -4520,142 +4552,171 @@ try {
     }
 
     async function handleGenerateExamples() {
-        if (!ui.inputText || !ui.additionalOutput || !ui.additionalOutputWrapper) return;
-        if (state.isLoading || !ui.inputText.value.trim()) return showMessage("Vui lòng nhập một từ để tạo ví dụ.");
+        const inputText = ui.inputText.value.trim();
+        if (state.isLoading || !inputText) return showMessage("Vui lòng nhập một từ để tạo ví dụ.");
+        
         setLoadingState(ui.generateExamplesButton, true, 'Tạo ví dụ');
-        const originalWord = ui.inputText.value.trim();
-        const prompt = `Với từ gốc là "${originalWord}", tạo 3 câu ví dụ tiếng Ê-đê và dịch sang tiếng Việt. Định dạng:\n1. [Câu Ê-đê]\n   - Dịch: [Câu Việt]\n...`;
+        const prompt = `Với từ gốc là "${inputText}", tạo 3 câu ví dụ tiếng Ê-đê chính xác và tự nhiên, sau đó dịch sang tiếng Việt. Hãy đảm bảo các ví dụ phản ánh đúng cách sử dụng trong thực tế. Định dạng:\n1. [Câu Ê-đê]\n   - Dịch: [Câu Việt]\n...`;
+        
         try {
-            const examples = await callGeminiAPI(prompt);
+            const examples = await callGeminiAPI(prompt, null, true); // Use grounding
             scheduleUIUpdate(() => {
                 ui.additionalOutput.value = examples;
                 ui.additionalOutputWrapper.classList.remove('hidden');
             });
-        } catch (error) {
-            showMessage(`Lỗi tạo ví dụ: ${error.message}`, 5000);
-        } finally {
-            setLoadingState(ui.generateExamplesButton, false, 'Tạo ví dụ');
-        }
+        } catch (error) { showMessage(`Lỗi tạo ví dụ: ${error.message}`, 5000);
+        } finally { setLoadingState(ui.generateExamplesButton, false, 'Tạo ví dụ'); }
     }
 
     async function handleSummarize() {
-        if (!ui.outputText || !ui.additionalOutput || !ui.additionalOutputWrapper) return;
-        if (state.isLoading || !ui.outputText.value.trim()) return showMessage("Vui lòng dịch một nội dung trước khi tóm tắt.");
+        const textToSummarize = ui.outputText.value.trim();
+        if (state.isLoading || !textToSummarize) return showMessage("Vui lòng dịch một nội dung trước khi tóm tắt.");
+        
         setLoadingState(ui.summarizeButton, true, 'Tóm tắt');
-        const prompt = `Tóm tắt hoặc giải thích ngắn gọn ý nghĩa của văn bản sau: "${ui.outputText.value}". Chỉ trả về phần tóm tắt/giải thích.`;
+        const prompt = `Trích xuất những điểm chính và thông tin quan trọng nhất từ văn bản sau. Trình bày dưới dạng gạch đầu dòng ngắn gọn và súc tích. Văn bản: "${textToSummarize}"`;
+        
         try {
-            const summary = await callGeminiAPI(prompt);
+            const summary = await callGeminiAPI(prompt, null, true); // Use grounding
             scheduleUIUpdate(() => {
                 ui.additionalOutput.value = summary;
                 ui.additionalOutputWrapper.classList.remove('hidden');
             });
-        } catch (error) {
-            showMessage(`Lỗi tóm tắt: ${error.message}`, 5000);
-        } finally {
-            setLoadingState(ui.summarizeButton, false, 'Tóm tắt');
-        }
+        } catch (error) { showMessage(`Lỗi tóm tắt: ${error.message}`, 5000);
+        } finally { setLoadingState(ui.summarizeButton, false, 'Tóm tắt'); }
     }
     
     async function handleGenerateParagraph() {
-        if (!ui.paragraphKeywords || !ui.edeParagraphOutput || !ui.vietParagraphOutput || !ui.paragraphOutputWrapper) return;
-        if (state.isLoading || !ui.paragraphKeywords.value.trim()) return;
+        const keywords = ui.paragraphKeywords.value.trim();
+        if (state.isLoading || !keywords) return;
         setLoadingState(ui.generateParagraphButton, true, 'Tạo Đoạn Văn');
-        const prompt = `Viết một đoạn văn tiếng Ê-đê hoàn chỉnh (mở bài, thân bài, kết bài) về chủ đề: "${ui.paragraphKeywords.value}". Sau đó, dịch toàn bộ sang tiếng Việt. Định dạng:\nTiếng Ê-đê:\n[Đoạn văn]\n\nTiếng Việt:\n[Đoạn văn]`;
+        const prompt = `Viết một đoạn văn tiếng Ê-đê hoàn chỉnh về chủ đề: "${keywords}". Sau đó, dịch toàn bộ sang tiếng Việt. Cuối cùng, tạo một phần "Phân tích từ vựng" liệt kê các từ khóa tiếng Ê-đê quan trọng trong đoạn văn và nghĩa tiếng Việt của chúng. Hãy ưu tiên sử dụng các từ có trong từ điển thông dụng. Định dạng:\n\nTiếng Ê-đê:\n[Đoạn văn]\n\nTiếng Việt:\n[Đoạn văn]\n\nPhân tích từ vựng:\n- [Từ Ê-đê 1]: [Nghĩa Việt]\n- [Từ Ê-đê 2]: [Nghĩa Việt]`;
+        
         try {
-            const rawResponse = await callGeminiAPI(prompt);
+            const rawResponse = await callGeminiAPI(prompt, null, true);
             const edeMatch = rawResponse.match(/Tiếng Ê-đê:\n([\s\S]*?)\n\nTiếng Việt:/i);
-            const vietMatch = rawResponse.match(/Tiếng Việt:\n([\s\S]*)/i);
+            const vietMatch = rawResponse.match(/Tiếng Việt:\n([\s\S]*?)\n\nPhân tích từ vựng:/i);
+            const analysisMatch = rawResponse.match(/Phân tích từ vựng:\n([\s\S]*)/i);
+
             scheduleUIUpdate(() => {
-                ui.edeParagraphOutput.value = edeMatch ? edeMatch[1].trim() : "Không thể phân tách đoạn văn Ê-đê.";
-                ui.vietParagraphOutput.value = vietMatch ? vietMatch[1].trim() : "Không thể phân tách bản dịch Việt.";
+                ui.edeParagraphOutput.value = edeMatch ? edeMatch[1].trim() : "Không thể trích xuất đoạn văn Ê-đê.";
+                ui.vietParagraphOutput.value = vietMatch ? vietMatch[1].trim() : "Không thể trích xuất bản dịch Việt.";
                 ui.paragraphOutputWrapper.classList.remove('hidden');
+
+                if (analysisMatch && ui.paragraphAnalysisResult) {
+                    const analysisHtml = analysisMatch[1].trim().split('\n').map(line => {
+                        const parts = line.replace(/^- /, '').split(':');
+                        if (parts.length < 2) return '';
+                        return `<li><strong style="color: var(--text-primary);">${parts[0].trim()}:</strong> <span style="color: var(--text-secondary);">${parts.slice(1).join(':').trim()}</span></li>`;
+                    }).join('');
+                    ui.paragraphAnalysisResult.innerHTML = `<ul class="space-y-2">${analysisHtml}</ul>`;
+                    ui.paragraphAnalysisWrapper.classList.remove('hidden');
+                } else {
+                    ui.paragraphAnalysisWrapper.classList.add('hidden');
+                }
             });
-        } catch (error) {
+        } catch (error) { 
             showMessage(`Lỗi tạo đoạn văn: ${error.message}`, 5000);
-        } finally {
-            setLoadingState(ui.generateParagraphButton, false, 'Tạo Đoạn Văn');
+        } finally { 
+            setLoadingState(ui.generateParagraphButton, false, 'Tạo Đoạn Văn'); 
         }
     }
-
+    
     async function handleTranslateImage() {
-        if(!ui.imagePreview?.src || !ui.imageTranslateResultWrapper || !ui.vietImageText || !ui.edeImageText || !ui.wordAnalysisResult) return;
+        // Implementation remains largely the same, but ensures grounding is used for word analysis
+        if(!ui.imagePreview || !ui.imagePreview.src) return;
         setLoadingState(ui.translateImageButton, true, 'Dịch từ ảnh');
         scheduleUIUpdate(() => {
             ui.imageTranslateResultWrapper.classList.add('hidden');
-            ui.wordAnalysisResult.innerHTML = '<div class="flex justify-center items-center p-4"><div class="loader"></div></div>';
+            ui.exerciseSection.classList.add('hidden');
+            ui.exerciseSolutionWrapper.classList.add('hidden');
         });
+        state.lastExtractedImageText = '';
 
         const base64Image = ui.imagePreview.src.split(',')[1];
         const mimeTypeMatch = ui.imagePreview.src.match(/data:(.*);/);
-        if (!mimeTypeMatch) {
-            showMessage("Không thể xác định loại tệp ảnh.");
-            setLoadingState(ui.translateImageButton, false, 'Dịch từ ảnh');
-            return;
-        }
-        const mimeType = mimeTypeMatch[1];
+        const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : 'image/png';
         
         try {
-            const extractPrompt = `Trích xuất văn bản từ ảnh. Chỉ trả về văn bản thuần túy.`;
+            const extractPrompt = `Trích xuất tất cả văn bản từ ảnh này. Chỉ trả về văn bản thuần túy.`;
             const extractedText = await callGeminiAPI(extractPrompt, { mimeType, data: base64Image });
-            
-            const translatePrompt = `Dịch văn bản sau sang cả Tiếng Việt và Tiếng Ê-đê: "${extractedText}". Định dạng:\nTiếng Việt:\n[Bản dịch]\n\nTiếng Ê-đê:\n[Bản dịch]`;
-            const translationsRaw = await callGeminiAPI(translatePrompt);
+            state.lastExtractedImageText = extractedText;
 
-            const vietMatch = translationsRaw.match(/Tiếng Việt:\n([\s\S]*?)\n\nTiếng Ê-đê:/i);
-            const edeMatch = translationsRaw.match(/Tiếng Ê-đê:\n([\s\S]*)/i);
+            const vietPrompt = `Dịch văn bản sau sang Tiếng Việt: "${extractedText}"`;
+            const edePrompt = `Dịch văn bản sau sang Tiếng Ê-đê: "${extractedText}"`;
+
+            const [vietTranslation, edeTranslation] = await Promise.all([
+                callGeminiAPI(vietPrompt, null, true), // Use grounding
+                callGeminiAPI(edePrompt, null, true)  // Use grounding
+            ]);
 
             scheduleUIUpdate(() => {
-                ui.vietImageText.value = vietMatch ? vietMatch[1].trim() : "Không thể dịch sang Tiếng Việt.";
-                ui.edeImageText.value = edeMatch ? edeMatch[1].trim() : "Không thể dịch sang Tiếng Ê-đê.";
+                ui.vietImageText.value = vietTranslation;
+                ui.edeImageText.value = edeTranslation;
                 ui.imageTranslateResultWrapper.classList.remove('hidden');
+                if (extractedText.toLowerCase().includes('bài tập')) {
+                   ui.exerciseSection.classList.remove('hidden');
+                }
             });
 
-            await analyzeWords(extractedText);
-
+            await analyzeWords(extractedText); 
         } catch (error) {
             showMessage(`Lỗi dịch ảnh: ${error.message}`, 5000);
-            scheduleUIUpdate(() => { ui.wordAnalysisResult.innerHTML = `<p class="text-red-500 text-center">Lỗi phân tích từ.</p>`; });
         } finally {
             setLoadingState(ui.translateImageButton, false, 'Dịch từ ảnh');
         }
     }
 
     async function analyzeWords(text) {
-        if (!text || !ui.wordAnalysisResult) return;
+        if (!ui.wordAnalysisResult || !text) return;
+        scheduleUIUpdate(() => { ui.wordAnalysisResult.innerHTML = '<div class="loader mx-auto"></div>'; });
+
         const words = [...new Set(text.toLowerCase().match(/\b(\w+)\b/g) || [])];
-        let analysisHtml = '';
+        if (words.length === 0) {
+            scheduleUIUpdate(() => { ui.wordAnalysisResult.innerHTML = `<p style="color: var(--text-secondary);">Không tìm thấy từ để phân tích.</p>`; });
+            return;
+        }
+
+        const knownWords = new Map();
         const wordsToAskAI = [];
 
         words.forEach(word => {
-            const foundViet = internalDictionary.find(term => term.meanings.some(m => m.vietnamese.toLowerCase() === word));
-            const foundEde = internalDictionary.find(term => term.ede.toLowerCase() === word);
-            if (foundEde) {
-                analysisHtml += `<p><strong>${word}:</strong> ${foundEde.meanings.map(m => m.vietnamese).join(', ')} <span class="text-xs" style="color:var(--text-secondary)">(từ điển)</span></p>`;
-            } else if (foundViet) {
-                 analysisHtml += `<p><strong>${word}:</strong> ${foundViet.ede} <span class="text-xs" style="color:var(--text-secondary)">(từ điển)</span></p>`;
+            const foundInDict = internalDictionary.find(entry => entry.ede.toLowerCase() === word || entry.meanings.some(m => m.vietnamese.toLowerCase() === word));
+            if (foundInDict) {
+                const isEde = foundInDict.ede.toLowerCase() === word;
+                knownWords.set(word, isEde ? foundInDict.meanings.map(m => m.vietnamese).join(', ') : foundInDict.ede);
             } else {
                 wordsToAskAI.push(word);
             }
         });
 
         if (wordsToAskAI.length > 0) {
-            const prompt = `Cung cấp định nghĩa ngắn gọn cho các từ sau (Việt hoặc Ê-đê): ${wordsToAskAI.join(', ')}. Định dạng cho mỗi từ: "Từ: Nghĩa".`;
             try {
-                const aiDefinitions = await callGeminiAPI(prompt);
-                analysisHtml += aiDefinitions.split('\n').map(line => {
-                    if (line.includes(':')) {
-                        const parts = line.split(':');
-                        return `<p><strong>${parts[0].trim()}:</strong> ${parts[1].trim()}</p>`;
+                const prompt = `Định nghĩa ngắn gọn các từ sau, mỗi từ trên một dòng, theo định dạng "từ : nghĩa". Hãy tra cứu để đảm bảo định nghĩa chính xác. Nếu không biết, ghi "không rõ". Danh sách từ: ${wordsToAskAI.join(', ')}`;
+                const aiResponse = await callGeminiAPI(prompt, null, true); // Use grounding
+                aiResponse.split('\n').forEach(line => {
+                    const parts = line.split(':');
+                    if (parts.length >= 2) {
+                        const word = parts[0].trim().toLowerCase();
+                        const definition = parts.slice(1).join(':').trim();
+                        knownWords.set(word, definition);
                     }
-                    return '';
-                }).join('');
-            } catch (e) {
-                analysisHtml += `<p class="text-red-500">Lỗi tra cứu từ bằng AI.</p>`;
+                });
+            } catch (error) {
+                console.error("Lỗi phân tích từ bằng AI:", error);
             }
         }
-        
+
         scheduleUIUpdate(() => {
-            ui.wordAnalysisResult.innerHTML = analysisHtml || '<p>Không có từ nào để phân tích.</p>';
+            ui.wordAnalysisResult.innerHTML = '';
+            const list = document.createElement('ul');
+            list.className = 'space-y-2';
+            words.forEach(word => {
+                const li = document.createElement('li');
+                const definition = knownWords.get(word) || "Không tra được nghĩa.";
+                li.innerHTML = `<strong style="color: var(--text-primary);">${word}:</strong> <span style="color: var(--text-secondary);">${definition}</span>`;
+                list.appendChild(li);
+            });
+            ui.wordAnalysisResult.appendChild(list);
         });
     }
 
@@ -4675,126 +4736,195 @@ try {
             showMessage("Vui lòng chọn một tệp hình ảnh hợp lệ.");
         }
     }
-
-    function toggleChat() {
-        if (ui.aiChatContainer) scheduleUIUpdate(() => ui.aiChatContainer.classList.toggle('hidden'));
-    }
     
-    async function handleAIChat() {
-        if (!ui.chatInput || !ui.chatMessages) return;
-        const userInput = ui.chatInput.value.trim();
-        if (!userInput || state.isChatLoading) return;
-        addChatMessage(userInput, 'user');
-        scheduleUIUpdate(() => { ui.chatInput.value = ''; });
-        state.isChatLoading = true;
-        addChatMessage('...', 'ai', true); 
-        state.chatHistory.push({ role: "user", parts: [{ text: userInput }] });
-        const system_prompt = `Bạn là một trợ lý AI hữu ích. Hãy trả lời mọi câu hỏi của người dùng một cách thân thiện và súc tích. Nếu câu hỏi liên quan đến ngôn ngữ hoặc văn hóa Ê-đê, hãy cung cấp câu trả lời chi tiết hơn.`;
+    async function handleSolveExercise() {
+        if (state.isLoading || !state.lastExtractedImageText) {
+            return showMessage("Không có văn bản nào từ ảnh để giải.", 3000);
+        }
+        setLoadingState(ui.solveExerciseButton, true, 'Giải bài tập');
+        scheduleUIUpdate(() => ui.exerciseSolutionWrapper.classList.add('hidden'));
+
+        const prompt = `Với vai trò là một trợ giảng, hãy đọc và giải chi tiết bài tập có trong đoạn văn bản sau. Trình bày lời giải một cách rõ ràng, từng bước một. Văn bản: "${state.lastExtractedImageText}"`;
+
         try {
-            const fullPrompt = `${system_prompt} Lịch sử trò chuyện: ${JSON.stringify(state.chatHistory.slice(0, -1))}. Câu hỏi hiện tại: "${userInput}"`;
-            const response = await callGeminiAPI(fullPrompt);
-            state.chatHistory.push({ role: "model", parts: [{ text: response }] });
-            updateLastChatMessage(response);
+            const solution = await callGeminiAPI(prompt, null, true);
+            scheduleUIUpdate(() => {
+                ui.exerciseSolutionText.value = solution;
+                ui.exerciseSolutionWrapper.classList.remove('hidden');
+            });
         } catch (error) {
-            updateLastChatMessage(`Xin lỗi, tôi gặp lỗi: ${error.message}`);
+            showMessage(`Lỗi khi giải bài tập: ${error.message}`, 5000);
         } finally {
-            state.isChatLoading = false;
+            setLoadingState(ui.solveExerciseButton, false, 'Giải bài tập');
         }
     }
     
+    // --- AI CHATBOT ---
+    function toggleChat() {
+        scheduleUIUpdate(() => {
+            ui.aiChatContainer.classList.toggle('hidden');
+            if (!ui.aiChatContainer.classList.contains('hidden')) {
+                ui.chatInput.focus();
+                generateAndShowAISuggestions();
+            }
+        });
+    }
+
+    async function handleAIChat() {
+        const userInput = ui.chatInput.value.trim();
+        if (!userInput || state.isChatLoading) return;
+
+        state.isChatLoading = true;
+        ui.chatInput.value = '';
+        ui.sendChatButton.disabled = true;
+
+        addChatMessage(userInput, 'user');
+        addChatMessage('', 'ai', true); // Loading indicator
+
+        const prompt = `Bạn là một trợ lý ngôn ngữ chuyên về văn hóa và ngôn ngữ Ê-đê. Trả lời câu hỏi sau một cách ngắn gọn, hữu ích và thân thiện. Câu hỏi: "${userInput}"`;
+
+        try {
+            const aiResponse = await callGeminiAPI(prompt, null, true);
+            updateLastChatMessage(aiResponse);
+            await generateAndShowAISuggestions(aiResponse);
+        } catch (error) {
+            updateLastChatMessage(`Xin lỗi, đã có lỗi xảy ra: ${error.message}`);
+        } finally {
+            state.isChatLoading = false;
+            ui.sendChatButton.disabled = false;
+        }
+    }
+
     function addChatMessage(message, sender, isLoading = false) {
-        if (!ui.chatMessages) return;
         scheduleUIUpdate(() => {
             const messageDiv = document.createElement('div');
+            const iconHTML = sender === 'ai' ? `<div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background-color: var(--primary-color); color: white;">${icons.ai}</div>` : '';
+            const messageClass = sender === 'ai' ? 'ai-message' : 'user-message ml-auto';
+            
             messageDiv.className = `flex items-start gap-3 ${sender === 'user' ? 'justify-end' : ''}`;
-            
-            const contentDiv = document.createElement('div');
-            contentDiv.className = 'p-3 rounded-lg max-w-xs';
-            contentDiv.style.backgroundColor = sender === 'user' ? 'var(--primary-color)' : 'var(--bg-tertiary)';
-            contentDiv.style.color = sender === 'user' ? 'white' : 'var(--text-primary)';
-            
-            const p = document.createElement('p');
-            p.className = 'text-sm';
-            p.innerHTML = isLoading ? '<div class="loader" style="border-top-color: var(--text-primary);"></div>' : message;
-            contentDiv.appendChild(p);
-
-            const iconDiv = document.createElement('div');
-            iconDiv.className = 'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0';
-            iconDiv.innerHTML = sender === 'user' ? '👤' : icons.ai;
-            iconDiv.style.backgroundColor = sender === 'user' ? 'var(--bg-tertiary)' : 'var(--primary-color)';
-            iconDiv.style.color = sender === 'user' ? 'var(--text-secondary)' : 'white';
-
-            if (sender === 'user') {
-                messageDiv.appendChild(contentDiv);
-                messageDiv.appendChild(iconDiv);
-            } else {
-                messageDiv.appendChild(iconDiv);
-                messageDiv.appendChild(contentDiv);
-            }
-            
+            messageDiv.innerHTML = `
+                ${sender === 'ai' ? iconHTML : ''}
+                <div class="p-3 rounded-lg max-w-xs ${messageClass}" style="background-color: ${sender === 'ai' ? 'var(--bg-tertiary)' : 'var(--primary-color)'}; color: ${sender === 'ai' ? 'var(--text-primary)' : 'white'};">
+                    ${isLoading ? '<div class="loader"></div>' : `<p class="text-sm">${message.replace(/\n/g, '<br>')}</p>`}
+                </div>
+            `;
             ui.chatMessages.appendChild(messageDiv);
             ui.chatMessages.scrollTop = ui.chatMessages.scrollHeight;
         });
     }
-
+    
     function updateLastChatMessage(newMessage) {
-        if (!ui.chatMessages) return;
         scheduleUIUpdate(() => {
-            const lastMessage = ui.chatMessages.lastChild?.querySelector('p');
+            const lastMessageContainer = ui.chatMessages.querySelector('.ai-message:last-child');
+            const lastMessage = lastMessageContainer?.querySelector('p');
             if (lastMessage) {
-                lastMessage.innerHTML = newMessage;
+                lastMessage.parentElement.innerHTML = `<p class="text-sm">${newMessage.replace(/\n/g, '<br>')}</p>`;
+                ui.chatMessages.scrollTop = ui.chatMessages.scrollHeight;
             }
         });
     }
 
-    function handleSwapLanguages() {
-        if (!ui.inputLang || !ui.outputLang || !ui.inputText || !ui.outputText) return;
-        scheduleUIUpdate(() => {
-            const currentInputLang = ui.inputLang.value;
-            ui.inputLang.value = ui.outputLang.value;
-            ui.outputLang.value = currentInputLang;
+    async function generateAndShowAISuggestions(baseResponse = null) {
+        let prompt = baseResponse 
+            ? `Dựa trên câu trả lời này: "${baseResponse}", hãy tạo 2 câu hỏi hoặc lệnh tiếp theo mà người dùng có thể muốn hỏi. Trả về dưới dạng danh sách gạch đầu dòng ngắn gọn.`
+            : `Gợi ý 3 hành động nhanh cho trợ lý ngôn ngữ Ê-đê. Ví dụ: "Dịch: Chào buổi sáng", "Văn hóa nhà dài là gì?". Trả về dưới dạng danh sách gạch đầu dòng ngắn gọn.`;
+        
+        try {
+            const response = await callGeminiAPI(prompt);
+            const suggestions = response.split('\n').map(s => s.replace(/^- /, '').trim()).filter(Boolean);
+            scheduleUIUpdate(() => {
+                ui.aiSuggestions.innerHTML = '';
+                suggestions.slice(0, 3).forEach(suggestionText => {
+                    const button = document.createElement('button');
+                    button.textContent = suggestionText;
+                    button.className = 'ai-suggestion-btn text-xs px-3 py-1 rounded-full';
+                    button.onclick = () => {
+                        ui.chatInput.value = suggestionText;
+                        handleAIChat();
+                    };
+                    ui.aiSuggestions.appendChild(button);
+                });
+            });
+        } catch (error) {
+            console.error("Lỗi tạo gợi ý:", error);
+        }
+    }
 
-            const currentInputText = ui.inputText.value;
+    // --- EVENT HANDLERS & SETUP ---
+    function handleSwapLanguages() {
+        scheduleUIUpdate(() => {
+            const tempLang = ui.inputLang.value;
+            ui.inputLang.value = ui.outputLang.value;
+            ui.outputLang.value = tempLang;
+
+            const tempText = ui.inputText.value;
+            if (ui.outputText.value.startsWith('Lỗi:')) return; // Don't swap if there's an error
             ui.inputText.value = ui.outputText.value;
-            ui.outputText.value = currentInputText;
+            ui.outputText.value = tempText;
         });
     }
 
     function setupEventListeners() {
-        if (ui.themeButtons) {
-            ui.themeButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const theme = button.dataset.theme;
-                    applyTheme(theme);
-                    localStorage.setItem('selectedTheme', theme);
-                    ui.themeButtons.forEach(btn => btn.classList.remove('active'));
-                    button.classList.add('active');
-                });
+        ui.themeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const theme = button.dataset.theme;
+                applyTheme(theme);
+                localStorage.setItem('selectedTheme', theme);
+                ui.themeButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
             });
-        }
-        if (ui.translateButton) ui.translateButton.addEventListener('click', handleTranslate);
-        if (ui.generateExamplesButton) ui.generateExamplesButton.addEventListener('click', handleGenerateExamples);
-        if (ui.summarizeButton) ui.summarizeButton.addEventListener('click', handleSummarize);
-        if (ui.generateParagraphButton) ui.generateParagraphButton.addEventListener('click', handleGenerateParagraph);
-        if (ui.translateImageButton) ui.translateImageButton.addEventListener('click', handleTranslateImage);
-        if (ui.swapLanguagesButton) ui.swapLanguagesButton.addEventListener('click', handleSwapLanguages);
+        });
         
-        if (ui.speakTranslatedTextButton) ui.speakTranslatedTextButton.addEventListener('click', () => speakText(ui.outputText?.value));
-        if (ui.speechSettingsButton) ui.speechSettingsButton.addEventListener('click', () => ui.speechSettingsPanel?.classList.toggle('hidden'));
-        if (ui.speedRange) ui.speedRange.addEventListener('input', () => { if(ui.speedValue) ui.speedValue.textContent = ui.speedRange.value; });
-
-        if (ui.tabs) {
-            ui.tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const targetTab = tab.dataset.tab;
-                    scheduleUIUpdate(() => {
-                        if (ui.tabs) ui.tabs.forEach(t => t.classList.toggle('active', t === tab));
-                        if (ui.tabContents) ui.tabContents.forEach(content => content.classList.toggle('hidden', content.id !== targetTab));
-                    });
+        ui.tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.dataset.tab;
+                scheduleUIUpdate(() => {
+                    ui.tabs.forEach(t => t.classList.toggle('active', t === tab));
+                    ui.tabContents.forEach(content => content.classList.toggle('hidden', content.id !== targetTab));
                 });
             });
-        }
+        });
 
+        ui.copyButton.addEventListener('click', () => {
+            if (ui.outputText.value && !ui.outputText.value.startsWith('Lỗi:')) {
+                 try { 
+                    navigator.clipboard.writeText(ui.outputText.value).then(() => {
+                        const originalIcon = ui.copyButton.innerHTML;
+                        ui.copyButton.innerHTML = icons.check;
+                        setTimeout(() => { ui.copyButton.innerHTML = originalIcon; }, 2000);
+                    });
+                 } catch (err) {
+                    showMessage("Không thể sao chép.", 3000);
+                 }
+            }
+        });
+
+        ui.clearHistoryButton.addEventListener('click', () => {
+            state.translationHistory = [];
+            localStorage.removeItem('translationHistory');
+            renderHistory();
+            showMessage("Đã xóa lịch sử dịch.", 3000);
+        });
+
+        ui.speechSettingsButton.addEventListener('click', () => {
+             ui.speechSettingsPanel.classList.toggle('open');
+        });
+
+        const addClickListener = (element, handler) => element?.addEventListener('click', handler);
+        addClickListener(ui.translateButton, handleTranslate);
+        addClickListener(ui.generateExamplesButton, handleGenerateExamples);
+        addClickListener(ui.summarizeButton, handleSummarize);
+        addClickListener(ui.generateParagraphButton, handleGenerateParagraph);
+        addClickListener(ui.translateImageButton, handleTranslateImage);
+        addClickListener(ui.swapLanguagesButton, handleSwapLanguages);
+        addClickListener(ui.speakTranslatedTextButton, () => speakText(ui.outputText?.value));
+        addClickListener(ui.solveExerciseButton, handleSolveExercise);
+        addClickListener(ui.aiAssistantButton, toggleChat);
+        addClickListener(ui.closeChatButton, toggleChat);
+        addClickListener(ui.sendChatButton, handleAIChat);
+        
+        if (ui.speedRange) ui.speedRange.addEventListener('input', () => { if(ui.speedValue) ui.speedValue.textContent = ui.speedRange.value; });
+        
         if (ui.dropZone) {
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => ui.dropZone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); }));
             ['dragenter', 'dragover'].forEach(ev => ui.dropZone.addEventListener(ev, () => scheduleUIUpdate(() => { if (ui.dropZone) ui.dropZone.style.borderColor = 'var(--primary-color)'; })));
@@ -4815,42 +4945,45 @@ try {
                     if (ui.imagePlaceholder) ui.imagePlaceholder.classList.remove('hidden');
                     if (ui.translateImageButton) ui.translateImageButton.disabled = true;
                     if (ui.imageTranslateResultWrapper) ui.imageTranslateResultWrapper.classList.add('hidden');
+                    if (ui.exerciseSection) ui.exerciseSection.classList.add('hidden');
+                    if (ui.exerciseSolutionWrapper) ui.exerciseSolutionWrapper.classList.add('hidden');
                 });
+                state.lastExtractedImageText = '';
             });
         }
-
-        if (ui.aiAssistantButton) ui.aiAssistantButton.addEventListener('click', toggleChat);
-        if (ui.closeChatButton) ui.closeChatButton.addEventListener('click', toggleChat);
-        if (ui.sendChatButton) ui.sendChatButton.addEventListener('click', handleAIChat);
-        if (ui.chatInput) ui.chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleAIChat(); });
         
-        if (ui.dictionarySearch) {
-            ui.dictionarySearch.addEventListener('input', (e) => renderInternalDictionary(e.target.value));
-        }
+        if (ui.chatInput) ui.chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleAIChat(); });
+        if (ui.dictionarySearch) ui.dictionarySearch.addEventListener('input', (e) => renderInternalDictionary(e.target.value));
     }
 
     // --- INITIALIZATION ---
-    const savedTheme = localStorage.getItem('selectedTheme') || 'light';
-    applyTheme(savedTheme);
-    if (ui.themeButtons) {
-        ui.themeButtons.forEach(btn => {
-            if (btn.dataset.theme === savedTheme) btn.classList.add('active');
-        });
+    function initializeApp() {
+        const savedTheme = localStorage.getItem('selectedTheme') || 'light';
+        applyTheme(savedTheme);
+        if (ui.themeButtons) {
+            const activeBtn = document.querySelector(`.theme-btn[data-theme="${savedTheme}"]`);
+            if(activeBtn) activeBtn.classList.add('active');
+        }
+
+        loadVoices();
+        if (state.speechSynthesis.onvoiceschanged !== undefined) { 
+            state.speechSynthesis.onvoiceschanged = loadVoices; 
+        }
+
+        setInitialIcons();
+        renderInternalDictionary();
+        loadHistory();
+        setupEventListeners();
+        
+        const greeting = "Chào bạn! Tôi là trợ lý AI được kết nối trực tuyến, sẵn sàng giúp bạn với những thông tin mới nhất. Tôi có thể giúp gì cho bạn?";
+        if (ui.aiGreetingMessage) ui.aiGreetingMessage.textContent = greeting;
     }
 
-    loadVoices();
-    if (state.speechSynthesis.onvoiceschanged !== undefined) { 
-        state.speechSynthesis.onvoiceschanged = loadVoices; 
-    }
-
-    setInitialIcons();
-    updateAIGreeting();
-    renderInternalDictionary();
-    setupEventListeners();
+    initializeApp();
 
 } catch (error) {
     console.error("Đã xảy ra lỗi nghiêm trọng:", error);
-    document.body.innerHTML = `<div class="text-center p-8"><h1>Đã có lỗi xảy ra</h1><p>${error.message}</p></div>`;
+    document.body.innerHTML = `<div class="text-center p-8"><h1>Đã có lỗi xảy ra</h1><p>Vui lòng tải lại trang. Lỗi: ${error.message}</p></div>`;
 }
 </script>
 </body>

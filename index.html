@@ -207,6 +207,10 @@
                                 <span class="button-icon"></span><span class="button-text">Dịch từ ảnh</span>
                             </button>
                             <div id="imageTranslateResultWrapper" class="mt-6 hidden space-y-6">
+                                <div class="flex flex-col space-y-2">
+                                    <label class="font-semibold">Văn bản gốc trích xuất</label>
+                                    <textarea id="extractedImageText" rows="4" readonly class="form-input w-full p-4 rounded-lg border-2 resize-none" style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);"></textarea>
+                                </div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div class="flex flex-col space-y-2"><label class="font-semibold">Bản dịch Tiếng Việt</label><textarea id="vietImageText" rows="6" readonly class="form-input w-full p-4 rounded-lg border-2 resize-none" style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);"></textarea></div>
                                     <div class="flex flex-col space-y-2"><label class="font-semibold">Bản dịch Tiếng Ê-đê</label><textarea id="edeImageText" rows="6" readonly class="form-input w-full p-4 rounded-lg border-2 resize-none" style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);"></textarea></div>
@@ -290,7 +294,7 @@ try {
     const translationCache = new Map();
     // Dictionary has been reduced as requested.
     const internalDictionary = [
-      { "ede": "Abao", "meanings": [{ "type": "dt", "vietnamese": "Ốc bươu" }] },
+     { "ede": "Abao", "meanings": [{ "type": "dt", "vietnamese": "Ốc bươu" }] },
 { "ede": "Abăn", "meanings": [{ "type": "dt", "vietnamese": "Cái chăn (mền)" }] },
 { "ede": "Abŭ", "meanings": [{ "type": "dt", "vietnamese": "Cái hũ" }] },
 { "ede": "Adei", "meanings": [{ "type": "dt", "vietnamese": "Em" }] },
@@ -4587,42 +4591,42 @@ try {
     
     async function handleGenerateParagraph() {
         const keywords = ui.paragraphKeywords.value.trim();
-        if (state.isLoading || !keywords) return;
+        if (state.isLoading || !keywords) {
+            return showMessage("Vui lòng nhập chủ đề để tạo đoạn văn.");
+        }
         setLoadingState(ui.generateParagraphButton, true, 'Tạo Đoạn Văn');
-        const prompt = `Viết một đoạn văn tiếng Ê-đê hoàn chỉnh về chủ đề: "${keywords}". Sau đó, dịch toàn bộ sang tiếng Việt. Cuối cùng, tạo một phần "Phân tích từ vựng" liệt kê các từ khóa tiếng Ê-đê quan trọng trong đoạn văn và nghĩa tiếng Việt của chúng. Hãy ưu tiên sử dụng các từ có trong từ điển thông dụng. Định dạng:\n\nTiếng Ê-đê:\n[Đoạn văn]\n\nTiếng Việt:\n[Đoạn văn]\n\nPhân tích từ vựng:\n- [Từ Ê-đê 1]: [Nghĩa Việt]\n- [Từ Ê-đê 2]: [Nghĩa Việt]`;
-        
+        scheduleUIUpdate(() => {
+            ui.paragraphOutputWrapper.classList.add('hidden');
+            ui.paragraphAnalysisWrapper.classList.add('hidden');
+        });
+
         try {
-            const rawResponse = await callGeminiAPI(prompt, null, true);
-            const edeMatch = rawResponse.match(/Tiếng Ê-đê:\n([\s\S]*?)\n\nTiếng Việt:/i);
-            const vietMatch = rawResponse.match(/Tiếng Việt:\n([\s\S]*?)\n\nPhân tích từ vựng:/i);
-            const analysisMatch = rawResponse.match(/Phân tích từ vựng:\n([\s\S]*)/i);
+            // Step 1: Generate Vietnamese paragraph with 3 parts
+            const vietPrompt = `Viết một đoạn văn tiếng Việt hoàn chỉnh, có cấu trúc 3 phần rõ ràng (mở bài, thân bài, kết bài) về chủ đề: "${keywords}".`;
+            const vietnameseParagraph = await callGeminiAPI(vietPrompt, null, true);
 
+            // Step 2: Translate the Vietnamese paragraph to Ede
+            const edePrompt = `Bạn là một chuyên gia dịch thuật tiếng Ê-đê. Dịch chính xác đoạn văn tiếng Việt sau sang tiếng Ê-đê. Hãy dịch một cách tự nhiên, đúng ngữ pháp và ưu tiên dùng từ vựng phổ thông. Đoạn văn: "${vietnameseParagraph}"`;
+            const edeParagraph = await callGeminiAPI(edePrompt, null, true);
+
+            // Step 3: Update UI with the generated paragraphs
             scheduleUIUpdate(() => {
-                ui.edeParagraphOutput.value = edeMatch ? edeMatch[1].trim() : "Không thể trích xuất đoạn văn Ê-đê.";
-                ui.vietParagraphOutput.value = vietMatch ? vietMatch[1].trim() : "Không thể trích xuất bản dịch Việt.";
+                ui.edeParagraphOutput.value = edeParagraph;
+                ui.vietParagraphOutput.value = vietnameseParagraph;
                 ui.paragraphOutputWrapper.classList.remove('hidden');
-
-                if (analysisMatch && ui.paragraphAnalysisResult) {
-                    const analysisHtml = analysisMatch[1].trim().split('\n').map(line => {
-                        const parts = line.replace(/^- /, '').split(':');
-                        if (parts.length < 2) return '';
-                        return `<li><strong style="color: var(--text-primary);">${parts[0].trim()}:</strong> <span style="color: var(--text-secondary);">${parts.slice(1).join(':').trim()}</span></li>`;
-                    }).join('');
-                    ui.paragraphAnalysisResult.innerHTML = `<ul class="space-y-2">${analysisHtml}</ul>`;
-                    ui.paragraphAnalysisWrapper.classList.remove('hidden');
-                } else {
-                    ui.paragraphAnalysisWrapper.classList.add('hidden');
-                }
             });
-        } catch (error) { 
+
+            // Step 4: Analyze the generated Ede text and display vocabulary
+            await analyzeWords(edeParagraph, ui.paragraphAnalysisResult, ui.paragraphAnalysisWrapper);
+
+        } catch (error) {
             showMessage(`Lỗi tạo đoạn văn: ${error.message}`, 5000);
-        } finally { 
-            setLoadingState(ui.generateParagraphButton, false, 'Tạo Đoạn Văn'); 
+        } finally {
+            setLoadingState(ui.generateParagraphButton, false, 'Tạo Đoạn Văn');
         }
     }
     
     async function handleTranslateImage() {
-        // Implementation remains largely the same, but ensures grounding is used for word analysis
         if(!ui.imagePreview || !ui.imagePreview.src) return;
         setLoadingState(ui.translateImageButton, true, 'Dịch từ ảnh');
         scheduleUIUpdate(() => {
@@ -4637,28 +4641,34 @@ try {
         const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : 'image/png';
         
         try {
-            const extractPrompt = `Trích xuất tất cả văn bản từ ảnh này. Chỉ trả về văn bản thuần túy.`;
+            const extractPrompt = `Phân tích kỹ hình ảnh này và trích xuất TOÀN BỘ văn bản có trong đó. Cố gắng hết sức để đọc chính xác từng chữ, bao gồm cả các dấu câu và ký tự đặc biệt của tiếng Việt hoặc tiếng Ê-đê. Nếu văn bản mờ, hãy đưa ra phỏng đoán tốt nhất. Chỉ trả về văn bản thuần túy.`;
             const extractedText = await callGeminiAPI(extractPrompt, { mimeType, data: base64Image });
             state.lastExtractedImageText = extractedText;
 
-            const vietPrompt = `Dịch văn bản sau sang Tiếng Việt: "${extractedText}"`;
-            const edePrompt = `Dịch văn bản sau sang Tiếng Ê-đê: "${extractedText}"`;
+            scheduleUIUpdate(() => {
+                ui.extractedImageText.value = extractedText;
+            });
+            
+            const vietPrompt = `Dịch văn bản sau sang Tiếng Việt một cách chính xác, ưu tiên tra cứu từ điển nội bộ nếu có thể: "${extractedText}"`;
+            const edePrompt = `Dịch văn bản sau sang Tiếng Ê-đê một cách chính xác, ưu tiên tra cứu từ điển nội bộ nếu có thể: "${extractedText}"`;
 
             const [vietTranslation, edeTranslation] = await Promise.all([
-                callGeminiAPI(vietPrompt, null, true), // Use grounding
-                callGeminiAPI(edePrompt, null, true)  // Use grounding
+                callGeminiAPI(vietPrompt, null, true),
+                callGeminiAPI(edePrompt, null, true)
             ]);
 
             scheduleUIUpdate(() => {
                 ui.vietImageText.value = vietTranslation;
                 ui.edeImageText.value = edeTranslation;
                 ui.imageTranslateResultWrapper.classList.remove('hidden');
-                if (extractedText.toLowerCase().includes('bài tập')) {
+
+                const exerciseKeywords = ['bài tập', 'bài giải', 'câu hỏi', 'giải bài', 'tính:', 'question:', 'exercise:'];
+                if (exerciseKeywords.some(kw => extractedText.toLowerCase().includes(kw))) {
                    ui.exerciseSection.classList.remove('hidden');
                 }
             });
 
-            await analyzeWords(extractedText); 
+            await analyzeWords(extractedText, ui.wordAnalysisResult, ui.wordAnalysisResult.parentElement.parentElement); 
         } catch (error) {
             showMessage(`Lỗi dịch ảnh: ${error.message}`, 5000);
         } finally {
@@ -4666,13 +4676,18 @@ try {
         }
     }
 
-    async function analyzeWords(text) {
-        if (!ui.wordAnalysisResult || !text) return;
-        scheduleUIUpdate(() => { ui.wordAnalysisResult.innerHTML = '<div class="loader mx-auto"></div>'; });
+    async function analyzeWords(text, resultContainer, wrapperContainer) {
+        if (!resultContainer || !wrapperContainer || !text) return;
+        scheduleUIUpdate(() => { 
+            resultContainer.innerHTML = '<div class="loader mx-auto"></div>'; 
+            wrapperContainer.classList.remove('hidden');
+        });
 
-        const words = [...new Set(text.toLowerCase().match(/\b(\w+)\b/g) || [])];
+        const words = [...new Set(text.toLowerCase().match(/[\w'-]+/g) || [])];
         if (words.length === 0) {
-            scheduleUIUpdate(() => { ui.wordAnalysisResult.innerHTML = `<p style="color: var(--text-secondary);">Không tìm thấy từ để phân tích.</p>`; });
+            scheduleUIUpdate(() => { 
+                resultContainer.innerHTML = `<p style="color: var(--text-secondary);">Không tìm thấy từ để phân tích.</p>`; 
+            });
             return;
         }
 
@@ -4707,7 +4722,7 @@ try {
         }
 
         scheduleUIUpdate(() => {
-            ui.wordAnalysisResult.innerHTML = '';
+            resultContainer.innerHTML = '';
             const list = document.createElement('ul');
             list.className = 'space-y-2';
             words.forEach(word => {
@@ -4716,7 +4731,7 @@ try {
                 li.innerHTML = `<strong style="color: var(--text-primary);">${word}:</strong> <span style="color: var(--text-secondary);">${definition}</span>`;
                 list.appendChild(li);
             });
-            ui.wordAnalysisResult.appendChild(list);
+            resultContainer.appendChild(list);
         });
     }
 
@@ -4988,3 +5003,4 @@ try {
 </script>
 </body>
 </html>
+
